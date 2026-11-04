@@ -2,7 +2,7 @@
 
 One place for everything school: your schedule, subjects, notes, quiz cards, grades and an AI study chat. The goal is an open source app that students can use for free.
 
-> **Status: early preview.** Google sign-in, subjects, grades, the schedule, notes and quiz cards work with a real database. AI chat still uses sample data, and the AI isn't built yet. With no setup, everything runs on sample data.
+> **Status: early preview.** Google sign-in, subjects, grades, the schedule, notes, quiz cards and AI chat all work with a real database. AI chat uses each student's own API key. With no setup, everything runs on sample data.
 
 ## Features
 
@@ -14,9 +14,9 @@ One place for everything school: your schedule, subjects, notes, quiz cards, gra
 |   Notes    |        Rich text editor with autosave, search, filters and attachments        |
 | Quiz cards |          Decks, a subject filter, study mode and spaced repetition            |
 |   Grades   |  Weighted categories, editable grading scales, averages and a weight warning  |
-|  AI chat   |           Past chats and sending messages, with a placeholder reply           |
-|  Settings  |             Profile, terms, grading scales and Google connections             |
-| Night mode |      Follows your device until you choose, then remembers it on that device   |
+|  AI chat   |  Your own AI keys, a model picker, answers from your notes, cards from a note |
+|  Settings  |         Profile, terms, grading scales, AI keys and Google connections        |
+| Night mode |          Light by default, and remembers your choice on each device           |
 
 ## Getting started
 
@@ -95,7 +95,7 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 |   Note editor   |            Tiptap            |  In use |
 | Database, login | Supabase with Google sign-in |  In use |
 |   Quiz timing   |           ts-fsrs            |  In use |
-|    AI chatbot   | Each student's own API keys  | Planned |
+|    AI chatbot   | Each student's own API keys  |  In use |
 |     Hosting     |            Vercel            | Planned |
 
 ## Project docs

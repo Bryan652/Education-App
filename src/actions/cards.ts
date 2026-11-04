@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { MAX_GENERATED_CARDS } from "@/lib/ai/cards";
 import { scheduleReview } from "@/lib/cards/scheduler";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signedInClient } from "@/lib/supabase/server";
@@ -140,6 +141,51 @@ export async function deleteCard(id: string): Promise<ActionResult> {
 
   refreshPages();
   return { ok: true, message: "Deleted this card." };
+}
+
+const generatedDeckSchema = z.object({
+  name: deckSchema.shape.name,
+  cards: z.array(cardSchema).min(1, "Choose at least one card.").max(MAX_GENERATED_CARDS),
+});
+
+/** Saves AI-written cards as a new deck in the note's subject, linked back to the note. */
+export async function createDeckFromNote(
+  noteId: string,
+  name: string,
+  cards: { front: string; back: string }[],
+): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  if (!isSupabaseConfigured) return { ok: false, message: PREVIEW_MESSAGE };
+  if (!idSchema.safeParse(noteId).success) return { ok: false, message: "That note no longer exists." };
+
+  const parsed = generatedDeckSchema.safeParse({ name, cards });
+  if (!parsed.success) return { ok: false, message: "Check the deck name and the cards, then try again." };
+
+  const session = await signedInClient();
+  if (!session) return { ok: false, message: SIGNED_OUT_MESSAGE };
+  const { supabase } = session;
+
+  const failed = { ok: false as const, message: "Couldn't save these cards. Please try again." };
+
+  const note = await supabase.from("notes").select("subject_id").eq("id", noteId).maybeSingle();
+  if (note.error) return failed;
+  if (!note.data) return { ok: false, message: "That note no longer exists." };
+
+  const deck = await supabase
+    .from("decks")
+    .insert({ name: parsed.data.name, subject_id: note.data.subject_id, source_note_id: noteId })
+    .select("id")
+    .single();
+  if (deck.error) return failed;
+
+  const inserted = await supabase.from("cards").insert(parsed.data.cards.map((card) => ({ ...card, deck_id: deck.data.id })));
+  if (inserted.error) {
+    // Don't leave an empty deck behind.
+    await supabase.from("decks").delete().eq("id", deck.data.id);
+    return failed;
+  }
+
+  refreshPages();
+  return { ok: true, id: deck.data.id };
 }
 
 /** The server works out the schedule from the saved state, so the browser can't choose its own dates. */

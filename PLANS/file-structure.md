@@ -65,6 +65,7 @@ Education-App/
           sync/route.ts      Syncs Calendar events
     actions/                 Server Actions, one file per feature
       auth.ts                Starts Google sign-in
+      chat.ts
       subjects.ts
       schedule.ts
       notes.ts
@@ -102,7 +103,10 @@ Education-App/
         scheduler.ts         ts-fsrs wrapper
         scheduler.test.ts
       ai/
+        providers.ts         The AI providers and their addresses
         client.ts            Calls the provider the student selected
+        use-model-choice.ts  Remembers which key and model to use
+        cards.ts             Asks for quiz cards and reads the reply
         keys.ts              Keeps API keys on the student's device
         context.ts           Builds chatbot context from notes and subjects
       google/

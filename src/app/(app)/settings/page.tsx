@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { CalendarDays, FolderOpen, GraduationCap, LogIn } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
+import { AiKeysSection } from "@/components/settings/ai-keys-section";
 import { GradingScalesSection } from "@/components/settings/grading-scales-section";
 import { ProfileSection } from "@/components/settings/profile-section";
 import { TermsSection } from "@/components/settings/terms-section";
@@ -48,6 +49,19 @@ export default function SettingsPage() {
               <Suspense fallback={<SectionSkeleton label="Loading terms" />}>
                 <TermsSection />
               </Suspense>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">AI keys</CardTitle>
+              <CardDescription>
+                Keys stay on this device, and are only sent to the provider they belong to. If you use a paid key, set a
+                spending limit with that provider.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AiKeysSection />
             </CardContent>
           </Card>
 

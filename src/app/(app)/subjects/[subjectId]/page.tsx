@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Archive, Layers, NotebookPen, Pencil, Plus } from "lucide-react";
+import { ArrowRight, Archive, Layers, MessageCircle, NotebookPen, Pencil, Plus } from "lucide-react";
 import { DeckFormDialog } from "@/components/cards/card-dialogs";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
@@ -83,6 +83,10 @@ export default async function SubjectPage({ params }: Props) {
             </PreviewButton>
           ) : (
             <>
+              <Link href={`/chat?subject=${subject.id}`} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "px-3")}>
+                <MessageCircle aria-hidden />
+                Ask AI
+              </Link>
               <SubjectFormDialog subject={subject} terms={terms} scales={scaleOptions} variant="outline">
                 <Pencil aria-hidden />
                 Edit

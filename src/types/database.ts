@@ -98,6 +98,102 @@ export type Database = {
           },
         ];
       };
+      chat_messages: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          role: string;
+          thread_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          role: string;
+          thread_id: string;
+          user_id?: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          role?: string;
+          thread_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_fkey";
+            columns: ["thread_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "chat_threads";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "chat_messages_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      chat_threads: {
+        Row: {
+          created_at: string;
+          id: string;
+          note_id: string | null;
+          subject_id: string | null;
+          title: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          note_id?: string | null;
+          subject_id?: string | null;
+          title?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          note_id?: string | null;
+          subject_id?: string | null;
+          title?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chat_threads_note_fkey";
+            columns: ["note_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "notes";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "chat_threads_subject_fkey";
+            columns: ["subject_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "subjects";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "chat_threads_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       class_meetings: {
         Row: {
           created_at: string;
@@ -705,6 +801,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_chat_thread: {
+        Args: { p_message: string; p_note_id: string; p_subject_id: string; p_title: string };
+        Returns: string;
+      };
       note_storage_used_bytes: { Args: Record<PropertyKey, never>; Returns: number };
       record_card_review: {
         Args: { p_card_id: string; p_due_at: string; p_fsrs_state: Json; p_rating: number };

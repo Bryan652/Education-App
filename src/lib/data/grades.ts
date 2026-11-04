@@ -69,10 +69,9 @@ const getCategories = cache(async (): Promise<GradeCategory[]> => {
   }));
 });
 
-/** Sample subjects always use the sample grades on the built-in scale. */
-async function categoriesForSubjects(subjects: SubjectRecord[]) {
-  const usesDatabase = isSupabaseConfigured && subjects.some((subject) => !subject.isSample);
-  const stored = usesDatabase ? await getCategories() : [];
+/** Sample subjects, in the preview, use the sample grades on the built-in scale. */
+async function categoriesForSubjects() {
+  const stored = isSupabaseConfigured ? await getCategories() : [];
 
   return (subject: SubjectRecord) =>
     subject.isSample ? categoriesFor(subject.id) : stored.filter((category) => category.subjectId === subject.id);
@@ -80,7 +79,7 @@ async function categoriesForSubjects(subjects: SubjectRecord[]) {
 
 export async function getSubjectGrades(subject: SubjectRecord) {
   const { scales, defaultScale } = await getGradingScales();
-  const categories = (await categoriesForSubjects([subject]))(subject);
+  const categories = (await categoriesForSubjects())(subject);
   const scale = subject.isSample ? BUILT_IN_SCALE : scaleFor(subject, scales, defaultScale);
 
   return { categories, scale, grade: gradeOnScale(categories, scale) };
@@ -89,7 +88,7 @@ export async function getSubjectGrades(subject: SubjectRecord) {
 /** Grades for a whole list of subjects at once, using one query. */
 export async function getGradesBySubject(subjects: SubjectRecord[]) {
   const { scales, defaultScale } = await getGradingScales();
-  const categoriesOf = await categoriesForSubjects(subjects);
+  const categoriesOf = await categoriesForSubjects();
 
   return new Map<string, SubjectGrade>(
     subjects.map((subject) => {

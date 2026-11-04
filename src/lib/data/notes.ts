@@ -34,7 +34,9 @@ export interface NoteDetail {
   // A Tiptap document, or HTML for the sample notes.
   content: Json | string;
   files: NoteFileRecord[];
-  // Sample notes are read-only. The chat pages still link to them until step 7.
+  // Used for making cards. The editor keeps its own copy as the student types.
+  plainText: string;
+  // Sample notes are read-only, and only appear in the no-setup preview.
   isSample: boolean;
 }
 
@@ -63,8 +65,7 @@ export async function getNotes({ search = "", subjectId, limit }: { search?: str
     return limit ? notes.slice(0, limit) : notes;
   }
 
-  // Sample subjects can only be reached from pages that are still on sample data.
-  if (subjectId && !idSchema.safeParse(subjectId).success) return searchSampleNotes(search, subjectId);
+  if (subjectId && !idSchema.safeParse(subjectId).success) return [];
 
   await connection();
   const supabase = await createClient();
@@ -94,8 +95,9 @@ export async function getNotes({ search = "", subjectId, limit }: { search?: str
 }
 
 export async function getNoteById(id: string): Promise<NoteDetail | null> {
-  const sample = getSampleNote(id);
-  if (sample) {
+  if (!isSupabaseConfigured) {
+    const sample = getSampleNote(id);
+    if (!sample) return null;
     return {
       id: sample.id,
       subjectId: sample.subjectId,
@@ -103,10 +105,11 @@ export async function getNoteById(id: string): Promise<NoteDetail | null> {
       updatedAt: sample.updatedAt,
       content: sample.html,
       files: sample.files,
+      plainText: noteExcerpt(sample),
       isSample: true,
     };
   }
-  if (!isSupabaseConfigured || !idSchema.safeParse(id).success) return null;
+  if (!idSchema.safeParse(id).success) return null;
 
   await connection();
   const supabase = await createClient();
@@ -114,7 +117,7 @@ export async function getNoteById(id: string): Promise<NoteDetail | null> {
     getProfile(),
     supabase
       .from("notes")
-      .select("id, subject_id, title, content, updated_at, note_files(id, file_name, size_bytes, created_at)")
+      .select("id, subject_id, title, content, plain_text, updated_at, note_files(id, file_name, size_bytes, created_at)")
       .eq("id", id)
       .order("created_at", { referencedTable: "note_files" })
       .maybeSingle(),
@@ -128,6 +131,7 @@ export async function getNoteById(id: string): Promise<NoteDetail | null> {
     title: result.data.title,
     updatedAt: utcToLocal(result.data.updated_at, timezone),
     content: result.data.content,
+    plainText: result.data.plain_text ?? "",
     files: result.data.note_files.map((file) => ({
       id: file.id,
       fileName: file.file_name,

@@ -58,9 +58,8 @@ export const getSchedule = cache(async (): Promise<{ meetings: ClassMeetingRecor
   };
 });
 
-/** Sample subjects keep showing their sample class times and events when signed in. */
-export async function getSubjectSchedule(subject: { id: string; isSample: boolean }) {
-  const { meetings, events } = subject.isSample ? sampleSchedule() : await getSchedule();
+export async function getSubjectSchedule(subject: { id: string }) {
+  const { meetings, events } = await getSchedule();
   return {
     meetings: meetings.filter((meeting) => meeting.subjectId === subject.id),
     events: events.filter((event) => event.subjectId === subject.id),

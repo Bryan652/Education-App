@@ -3,10 +3,10 @@
 import type { ReactNode } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-// Follows the device until a student chooses, then remembers their choice on this device.
+// Light until a student chooses night mode, then their choice is remembered on this device.
 export function ThemeProvider({ children }: { children: ReactNode }) {
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
       {children}
     </NextThemesProvider>
   );

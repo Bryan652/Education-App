@@ -251,7 +251,9 @@ Unique on `(scale_id, min_percent)`.
 
 ### `chat_messages`
 
-Append-only, with no `updated_at`.
+Append-only, with no `updated_at`. A new message moves its chat to the top of the list. `content` can be up to 100,000 characters.
+
+`create_chat_thread(...)` creates a chat and its first message in one transaction, so a failure can't leave an empty chat behind. It runs with the caller's rights, so row-level security still applies.
 
 |    Column   |  Type  | Required |                     Details                     |
 | :---------: | :----: | :------: | :---------------------------------------------: |

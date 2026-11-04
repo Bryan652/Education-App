@@ -31,7 +31,7 @@ export interface CardRecord {
 
 export interface DeckDetail extends DeckSummary {
   cards: CardRecord[];
-  // Sample decks are read-only. Sample subjects still link to them until step 7.
+  // Sample decks are read-only, and only appear in the no-setup preview.
   isSample: boolean;
 }
 
@@ -64,22 +64,21 @@ export const getDecks = cache(async (): Promise<DeckSummary[]> => {
   }));
 });
 
-/** Sample subjects keep showing their sample decks when signed in. */
-export async function getSubjectDecks(subject: { id: string; isSample: boolean }) {
-  const decks = subject.isSample ? sampleDecks.map(sampleSummary) : await getDecks();
-  return decks.filter((deck) => deck.subjectId === subject.id);
+export async function getSubjectDecks(subject: { id: string }) {
+  return (await getDecks()).filter((deck) => deck.subjectId === subject.id);
 }
 
 export async function getDeckById(id: string): Promise<DeckDetail | null> {
-  const sample = getSampleDeck(id);
-  if (sample) {
+  if (!isSupabaseConfigured) {
+    const sample = getSampleDeck(id);
+    if (!sample) return null;
     return {
       ...sampleSummary(sample),
       cards: sample.cards.map((card) => ({ ...card, dueAt: null, state: null })),
       isSample: true,
     };
   }
-  if (!isSupabaseConfigured || !idSchema.safeParse(id).success) return null;
+  if (!idSchema.safeParse(id).success) return null;
 
   await connection();
   const supabase = await createClient();

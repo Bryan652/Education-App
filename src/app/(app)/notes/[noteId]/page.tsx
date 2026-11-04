@@ -5,6 +5,7 @@ import type { Content } from "@tiptap/react";
 import { MessageCircle, Paperclip, Sparkles } from "lucide-react";
 import { PreviewButton } from "@/components/layout/preview-button";
 import { NoteAttachments } from "@/components/notes/note-attachments";
+import { MakeCardsDialog } from "@/components/notes/make-cards-dialog";
 import { DeleteNoteButton } from "@/components/notes/note-dialogs";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { NoteWorkspace } from "@/components/notes/note-workspace";
@@ -13,7 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getNoteById, getStorageUsed } from "@/lib/data/notes";
 import { getClock } from "@/lib/data/profile";
 import { getSubjects } from "@/lib/data/subjects";
-import { chatThreads, getNote as getSampleNote } from "@/lib/mock-data";
+import { getNote as getSampleNote } from "@/lib/mock-data";
 import { cn, relativeDay } from "@/lib/utils";
 
 type Props = { params: Promise<{ noteId: string }> };
@@ -28,7 +29,6 @@ export default async function NotePage({ params }: Props) {
   const note = await getNoteById(noteId);
   if (!note) notFound();
 
-  const thread = chatThreads.find((item) => item.noteId === note.id);
   const [{ active, archived }, { today }, usedBytes] = await Promise.all([
     getSubjects(),
     getClock(),
@@ -47,14 +47,15 @@ export default async function NotePage({ params }: Props) {
           ← All notes
         </Link>
         <div className="flex flex-wrap gap-2">
-          <PreviewButton variant="outline" size="lg" message="This is a preview, so AI can't generate cards yet.">
-            <Sparkles aria-hidden />
-            Make cards
-          </PreviewButton>
-          <Link
-            href={thread ? `/chat/${thread.id}` : "/chat"}
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-          >
+          {note.isSample ? (
+            <PreviewButton variant="outline" size="lg" message="This is a preview, so cards can't be saved yet.">
+              <Sparkles aria-hidden />
+              Make cards
+            </PreviewButton>
+          ) : (
+            <MakeCardsDialog noteId={note.id} noteTitle={note.title} noteText={note.plainText} />
+          )}
+          <Link href={`/chat?note=${note.id}`} className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
             <MessageCircle aria-hidden />
             Ask AI
           </Link>

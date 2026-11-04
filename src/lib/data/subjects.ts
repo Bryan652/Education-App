@@ -23,7 +23,7 @@ export interface SubjectRecord extends Subject {
   // Null means the subject uses the student's default grading scale.
   gradingScaleId: string | null;
   archivedAt: string | null;
-  // Sample subjects are read-only. Other pages still link to them until their build steps.
+  // Sample subjects are read-only, and only appear in the no-setup preview.
   isSample: boolean;
 }
 
@@ -91,9 +91,11 @@ export async function getSubjects() {
 }
 
 export async function getSubjectById(id: string): Promise<SubjectRecord | null> {
-  const sample = getSampleSubject(id);
-  if (sample) return toSampleRecord(sample);
-  if (!isSupabaseConfigured || !idSchema.safeParse(id).success) return null;
+  if (!isSupabaseConfigured) {
+    const sample = getSampleSubject(id);
+    return sample ? toSampleRecord(sample) : null;
+  }
+  if (!idSchema.safeParse(id).success) return null;
 
   await connection();
   const supabase = await createClient();
