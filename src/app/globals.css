@@ -87,6 +87,43 @@
   --sidebar-ring: oklch(0.7 0.08 258);
 }
 
+/* Night mode: navy paper, warm paper-colored text, and the same highlighter yellow. */
+.dark {
+  --background: oklch(0.19 0.025 258);
+  --foreground: oklch(0.93 0.01 85);
+  --card: oklch(0.235 0.03 258);
+  --card-foreground: oklch(0.93 0.01 85);
+  --popover: oklch(0.255 0.032 258);
+  --popover-foreground: oklch(0.93 0.01 85);
+  --primary: oklch(0.5 0.11 258);
+  --primary-foreground: oklch(0.98 0.005 85);
+  --secondary: oklch(0.3 0.03 258);
+  --secondary-foreground: oklch(0.93 0.01 85);
+  --muted: oklch(0.29 0.03 258);
+  --muted-foreground: oklch(0.77 0.02 258);
+  --accent: oklch(0.31 0.035 258);
+  --accent-foreground: oklch(0.93 0.01 85);
+  --highlight: oklch(0.88 0.13 96);
+  --highlight-foreground: oklch(0.25 0.05 85);
+  --destructive: oklch(0.72 0.17 25);
+  --border: oklch(0.33 0.03 258);
+  --input: oklch(0.38 0.03 258);
+  --ring: oklch(0.7 0.1 258);
+  --chart-1: oklch(0.72 0.11 250);
+  --chart-2: oklch(0.75 0.11 165);
+  --chart-3: oklch(0.72 0.13 315);
+  --chart-4: oklch(0.73 0.14 35);
+  --chart-5: oklch(0.78 0.12 85);
+  --sidebar: oklch(0.155 0.025 258);
+  --sidebar-foreground: oklch(0.82 0.015 258);
+  --sidebar-primary: oklch(0.88 0.13 96);
+  --sidebar-primary-foreground: oklch(0.25 0.03 258);
+  --sidebar-accent: oklch(0.26 0.035 258);
+  --sidebar-accent-foreground: oklch(0.97 0.005 85);
+  --sidebar-border: oklch(0.28 0.03 258);
+  --sidebar-ring: oklch(0.7 0.08 258);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -102,6 +139,23 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Subject colors. Pages set --subject, and these keep each color readable on either background. */
+.subject-badge {
+  background-color: color-mix(in oklch, var(--subject) 13%, white);
+  color: color-mix(in oklch, var(--subject) 62%, black);
+}
+.subject-text {
+  color: var(--subject);
+}
+.dark .subject-badge {
+  /* Mixed in srgb, because oklch would travel around the color wheel and change the subject's hue. */
+  background-color: color-mix(in srgb, var(--subject) 32%, var(--card));
+  color: color-mix(in oklch, var(--subject) 30%, white);
+}
+.dark .subject-text {
+  color: color-mix(in oklch, var(--subject) 50%, white);
 }
 
 /* Note editor */
@@ -140,6 +194,9 @@
   border-left: 3px solid var(--highlight);
   border-radius: 0 0.5rem 0.5rem 0;
   padding: 0.6rem 0.9rem;
+}
+.dark .note-content blockquote {
+  background: color-mix(in oklch, var(--highlight) 12%, transparent);
 }
 .note-content code {
   background: var(--muted);
@@ -202,6 +259,17 @@
   --fc-classic-muted-foreground: var(--muted-foreground);
   --fc-classic-border: var(--border);
   font-size: 0.875rem;
+}
+.dark .schedule-calendar {
+  --fc-classic-button-strong: var(--primary);
+  --fc-classic-button-strong-border: var(--primary);
+  --fc-classic-highlight: #3b82f633;
+  --fc-classic-today: color-mix(in srgb, var(--highlight) 7%, transparent);
+  --fc-classic-faint: #ffffff0a;
+  --fc-classic-muted: #ffffff14;
+  --fc-classic-strong: #ffffff24;
+  --fc-classic-faint-foreground: var(--muted-foreground);
+  --fc-classic-strong-border: var(--input);
 }
 .schedule-list-title {
   text-overflow: clip !important;

@@ -16,6 +16,7 @@ One place for everything school: your schedule, subjects, notes, quiz cards, gra
 |   Grades   |  Weighted categories, editable grading scales, averages and a weight warning  |
 |  AI chat   |           Past chats and sending messages, with a placeholder reply           |
 |  Settings  |             Profile, terms, grading scales and Google connections             |
+| Night mode |      Follows your device until you choose, then remembers it on that device   |
 
 ## Getting started
 

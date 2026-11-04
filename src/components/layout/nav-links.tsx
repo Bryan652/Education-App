@@ -72,7 +72,7 @@ function BottomItems({ pathname }: { pathname: string }) {
         aria-current={active ? "page" : undefined}
         className={cn(
           "flex flex-col items-center gap-1 py-2 text-[0.6875rem] font-medium text-muted-foreground",
-          active && "text-primary",
+          active && "text-primary dark:text-highlight",
         )}
       >
         <item.icon className="size-5" aria-hidden />

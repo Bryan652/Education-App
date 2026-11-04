@@ -153,7 +153,7 @@ export function StudySession({
             <CardText text={current.front} />
             <span className="text-center text-sm text-muted-foreground">Click or press Space to show the answer</span>
           </span>
-          <span aria-hidden={!flipped} className="flip-face flip-face-back flex flex-col rounded-2xl bg-sidebar p-6 text-sidebar-accent-foreground shadow-sm sm:p-8">
+          <span aria-hidden={!flipped} className="flip-face flip-face-back flex flex-col rounded-2xl bg-sidebar p-6 text-sidebar-accent-foreground shadow-sm ring-sidebar-border sm:p-8 dark:ring-1">
             <span className="text-xs font-medium tracking-wide text-sidebar-primary">ANSWER</span>
             <CardText text={current.back} />
             <span className="text-center text-sm text-sidebar-foreground">How well did you know this?</span>
@@ -171,7 +171,7 @@ export function StudySession({
               className="h-auto flex-col gap-0.5 py-2.5"
             >
               <span>{rating.label}</span>
-              <span className="text-xs font-normal opacity-75">{intervals[rating.value]}</span>
+              <span className="text-xs font-normal opacity-90">{intervals[rating.value]}</span>
             </Button>
           ))
         ) : (

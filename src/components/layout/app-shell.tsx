@@ -4,6 +4,7 @@ import { GraduationCap, Settings } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { UserName } from "@/components/auth/user-name";
 import { BottomNavLinks, SidebarNavLinks, SidebarSettingsLink } from "@/components/layout/nav-links";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -28,7 +29,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <UserName />
               <p className="text-xs">{isSupabaseConfigured ? "Some sample data" : "Sample data"}</p>
             </div>
-            <SignOutButton iconOnly />
+            <div className="flex shrink-0 items-center gap-0.5">
+              <ThemeToggle className="p-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+              <SignOutButton iconOnly />
+            </div>
           </div>
         </div>
       </aside>
@@ -40,9 +44,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
           <span className="font-heading font-semibold">Education App</span>
         </Link>
-        <Link href="/settings" aria-label="Settings" className="rounded-md p-2 hover:bg-muted">
-          <Settings className="size-5" aria-hidden />
-        </Link>
+        <div className="flex items-center gap-1">
+          <ThemeToggle className="p-2 hover:bg-muted" iconClassName="size-5" />
+          <Link href="/settings" aria-label="Settings" className="rounded-md p-2 hover:bg-muted">
+            <Settings className="size-5" aria-hidden />
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-24 sm:px-6 lg:px-10 lg:pt-10 lg:pb-12">{children}</main>

@@ -3,11 +3,22 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export function SignOutButton({ iconOnly = false }: { iconOnly?: boolean }) {
+  const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function signOut() {
@@ -25,25 +36,43 @@ export function SignOutButton({ iconOnly = false }: { iconOnly?: boolean }) {
     window.location.assign("/login");
   }
 
-  if (iconOnly) {
-    return (
-      <button
-        type="button"
-        onClick={signOut}
-        disabled={pending}
-        aria-label="Sign out"
-        title="Sign out"
-        className="rounded-md p-1.5 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground disabled:opacity-50"
-      >
-        <LogOut className="size-4" aria-hidden />
-      </button>
-    );
-  }
-
   return (
-    <Button type="button" variant="outline" size="lg" onClick={signOut} disabled={pending} className="w-fit">
-      <LogOut aria-hidden />
-      Sign out
-    </Button>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      {iconOnly ? (
+        <AlertDialogTrigger
+          aria-label="Sign out"
+          title="Sign out"
+          render={
+            <button
+              type="button"
+              className="rounded-md p-1.5 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            />
+          }
+        >
+          <LogOut className="size-4" aria-hidden />
+        </AlertDialogTrigger>
+      ) : (
+        <AlertDialogTrigger render={<Button type="button" variant="outline" size="lg" className="w-fit" />}>
+          <LogOut aria-hidden />
+          Sign out
+        </AlertDialogTrigger>
+      )}
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Sign out?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Your work stays saved to your account. You&apos;ll need to sign in again to get back to it.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel size="lg" className="px-3" disabled={pending}>
+            Cancel
+          </AlertDialogCancel>
+          <Button size="lg" className="px-3" disabled={pending} onClick={signOut}>
+            {pending ? "Signing out…" : "Sign out"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

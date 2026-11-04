@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -74,8 +75,11 @@ export default async function SubjectGradesPage({ params }: Props) {
         <div>
           <p className="text-sm font-medium text-muted-foreground">Current grade</p>
           <p
-            className={cn("mt-1 font-heading text-6xl font-semibold", grade.passing === false && "text-destructive")}
-            style={grade.passing === false ? undefined : { color: subject.color }}
+            className={cn(
+              "mt-1 font-heading text-6xl font-semibold",
+              grade.passing === false ? "text-destructive" : "subject-text",
+            )}
+            style={{ "--subject": subject.color } as CSSProperties}
           >
             {grade.label ?? "–"}
           </p>
@@ -113,7 +117,7 @@ export default async function SubjectGradesPage({ params }: Props) {
       {categories.length > 0 && grade.totalWeight !== 100 && (
         <p
           role="status"
-          className="mb-6 flex items-start gap-2.5 rounded-lg bg-highlight/50 px-4 py-3 text-sm text-highlight-foreground"
+          className="mb-6 flex items-start gap-2.5 rounded-lg bg-highlight/50 px-4 py-3 text-sm text-highlight-foreground dark:bg-highlight"
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           Your category weights add up to {grade.totalWeight}, not 100. Check your syllabus so this grade is accurate.

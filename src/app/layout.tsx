@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Instrument_Sans } from "next/font/google";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -21,10 +22,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`}>
+    // The theme is set on <html> before the page shows, so the server can't know it. That's what
+    // suppressHydrationWarning allows, and it only applies to this one element.
+    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
-        {children}
-        <Toaster theme="light" position="bottom-center" />
+        <ThemeProvider>
+          {children}
+          <Toaster position="bottom-center" />
+        </ThemeProvider>
       </body>
     </html>
   );
