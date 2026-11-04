@@ -3,6 +3,101 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      card_reviews: {
+        Row: {
+          card_id: string;
+          created_at: string;
+          id: string;
+          rating: number;
+          reviewed_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          card_id: string;
+          created_at?: string;
+          id?: string;
+          rating: number;
+          reviewed_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          card_id?: string;
+          created_at?: string;
+          id?: string;
+          rating?: number;
+          reviewed_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "card_reviews_card_fkey";
+            columns: ["card_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "cards";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "card_reviews_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cards: {
+        Row: {
+          back: string;
+          created_at: string;
+          deck_id: string;
+          due_at: string;
+          front: string;
+          fsrs_state: Json | null;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          back: string;
+          created_at?: string;
+          deck_id: string;
+          due_at?: string;
+          front: string;
+          fsrs_state?: Json | null;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          back?: string;
+          created_at?: string;
+          deck_id?: string;
+          due_at?: string;
+          front?: string;
+          fsrs_state?: Json | null;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cards_deck_fkey";
+            columns: ["deck_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "decks";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "cards_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       class_meetings: {
         Row: {
           created_at: string;
@@ -48,6 +143,59 @@ export type Database = {
           },
           {
             foreignKeyName: "class_meetings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      decks: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          source_note_id: string | null;
+          subject_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          source_note_id?: string | null;
+          subject_id: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          source_note_id?: string | null;
+          subject_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "decks_source_note_fkey";
+            columns: ["source_note_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "notes";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "decks_subject_fkey";
+            columns: ["subject_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "subjects";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "decks_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
@@ -558,6 +706,10 @@ export type Database = {
     };
     Functions: {
       note_storage_used_bytes: { Args: Record<PropertyKey, never>; Returns: number };
+      record_card_review: {
+        Args: { p_card_id: string; p_due_at: string; p_fsrs_state: Json; p_rating: number };
+        Returns: undefined;
+      };
       save_grading_scale: {
         Args: {
           p_average_label: string;

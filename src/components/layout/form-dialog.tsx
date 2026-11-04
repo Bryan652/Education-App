@@ -84,6 +84,7 @@ export function FormDialog({
   triggerProps,
   trigger,
   contentClassName = "sm:max-w-md",
+  stayOpen = false,
   children,
 }: {
   title: string;
@@ -93,9 +94,12 @@ export function FormDialog({
   triggerProps?: ComponentProps<typeof Button>;
   trigger: ReactNode;
   contentClassName?: string;
+  // Clears the form after saving instead of closing, for adding several things in a row.
+  stayOpen?: boolean;
   children: (errors: FieldErrors) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -105,7 +109,12 @@ export function FormDialog({
           <DialogTitle className="font-heading text-xl">{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <DialogForm action={action} submitLabel={submitLabel} onDone={() => setOpen(false)}>
+        <DialogForm
+          key={formKey}
+          action={action}
+          submitLabel={submitLabel}
+          onDone={() => (stayOpen ? setFormKey((key) => key + 1) : setOpen(false))}
+        >
           {children}
         </DialogForm>
       </DialogContent>

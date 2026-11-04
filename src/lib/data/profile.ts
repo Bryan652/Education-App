@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import { DEMO_TODAY, profile as sampleProfile } from "@/lib/mock-data";
 import { FALLBACK_TIMEZONE, nowIn } from "@/lib/schedule/time";
@@ -43,6 +44,21 @@ export const getProfile = cache(async (): Promise<Profile> => {
     defaultGradingScaleId: data?.default_grading_scale_id ?? null,
   };
 });
+
+/**
+ * For components in the (app) layout. The error page sits inside that layout, so it can't catch
+ * their errors, and a failed query would replace the whole app with no way to sign out. They carry
+ * on without the profile instead, and the page itself shows the error.
+ */
+export async function getProfileForLayout() {
+  try {
+    return await getProfile();
+  } catch (error) {
+    unstable_rethrow(error); // Next.js uses thrown errors for its own signals, which must pass through.
+    console.error(error);
+    return null;
+  }
+}
 
 /** The student's current date and time on their own clock. The preview always uses its fixed day. */
 export async function getClock() {

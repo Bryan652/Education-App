@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Archive, Layers, NotebookPen, Pencil, Plus } from "lucide-react";
+import { DeckFormDialog } from "@/components/cards/card-dialogs";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
 import { NewNoteDialog } from "@/components/notes/note-dialogs";
@@ -14,12 +15,13 @@ import { ArchiveButton, DeleteSubjectButton, RestoreButton } from "@/components/
 import { SubjectFormDialog } from "@/components/subjects/subject-form-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSubjectDecks } from "@/lib/data/cards";
 import { getGradingScales, getSubjectGrades } from "@/lib/data/grades";
 import { getNotes } from "@/lib/data/notes";
 import { getClock } from "@/lib/data/profile";
 import { getSubjectSchedule } from "@/lib/data/schedule";
 import { getSubjectById, getTerms } from "@/lib/data/subjects";
-import { decks, dueCount, getSubject as getSampleSubject } from "@/lib/mock-data";
+import { getSubject as getSampleSubject } from "@/lib/mock-data";
 import { upcomingEvents } from "@/lib/schedule/calendar";
 import { byWeekOrder, DAY_NAMES } from "@/lib/schedule/time";
 import { cn, formatClock, relativeDay } from "@/lib/utils";
@@ -37,10 +39,11 @@ export default async function SubjectPage({ params }: Props) {
   if (!subject) notFound();
 
   const editable = !subject.isSample;
-  const [{ grade }, schedule, subjectNotes, { today }, terms, { scales }] = await Promise.all([
+  const [{ grade }, schedule, subjectNotes, subjectDecks, { today }, terms, { scales }] = await Promise.all([
     getSubjectGrades(subject),
     getSubjectSchedule(subject),
     getNotes({ subjectId: subject.id }),
+    getSubjectDecks(subject),
     getClock(),
     editable ? getTerms() : [],
     getGradingScales(),
@@ -48,7 +51,6 @@ export default async function SubjectPage({ params }: Props) {
 
   const meetings = byWeekOrder(schedule.meetings);
   const upcoming = upcomingEvents(schedule.events, today, []);
-  const subjectDecks = decks.filter((deck) => deck.subjectId === subject.id);
   const scaleOptions = scales.flatMap((scale) => (scale.id ? [{ id: scale.id, name: scale.name }] : []));
   const thisSubject = [{ id: subject.id, name: subject.name }];
 
@@ -228,14 +230,22 @@ export default async function SubjectPage({ params }: Props) {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between gap-2">
             <CardTitle className="text-lg">Quiz cards</CardTitle>
+            {editable && (
+              <DeckFormDialog
+                subjects={thisSubject}
+                subjectId={subject.id}
+                triggerProps={{ ...addButton, "aria-label": "New deck" }}
+                trigger={<Plus aria-hidden />}
+              />
+            )}
           </CardHeader>
           <CardContent>
             {subjectDecks.length === 0 ? (
               <div className="flex flex-col items-start gap-3">
                 <p className="text-sm text-muted-foreground">No decks for this subject yet.</p>
-                <Link href="/decks" className={cn(buttonVariants({ variant: "outline" }))}>
+                <Link href={`/decks?subject=${subject.id}`} className={cn(buttonVariants({ variant: "outline" }))}>
                   Go to quiz cards
                 </Link>
               </div>
@@ -246,7 +256,7 @@ export default async function SubjectPage({ params }: Props) {
                     <Link href={`/decks/${deck.id}`} className="group flex items-center gap-3 text-sm">
                       <Layers className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                       <span className="flex-1 font-medium group-hover:underline">{deck.name}</span>
-                      <span className="text-muted-foreground">{dueCount(deck)} due</span>
+                      <span className="text-muted-foreground">{deck.dueCount} due</span>
                     </Link>
                   </li>
                 ))}

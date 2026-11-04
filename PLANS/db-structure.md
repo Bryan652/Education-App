@@ -172,7 +172,7 @@ Deleting a note row doesn't delete its stored files, so the app removes them fir
 
 ### `cards`
 
-Index on `(user_id, due_at)`.
+Index on `(user_id, due_at)`. `front` and `back` can be up to 2,000 characters. Editing a card keeps its schedule.
 
 |    Column    |      Type     | Required |                 Details                  |
 | :----------: | :-----------: | :------: | :--------------------------------------: |
@@ -184,7 +184,9 @@ Index on `(user_id, due_at)`.
 
 ### `card_reviews`
 
-Append-only history, with no `updated_at`.
+Append-only history, with no `updated_at`. Students can add rows but not change or delete them, and rows are only removed along with their card.
+
+`record_card_review(...)` updates a card's schedule and adds its review in one transaction, so the two can't disagree. It runs with the caller's rights, so row-level security still applies.
 
 |     Column    |      Type     | Required |                 Details                  |
 | :-----------: | :-----------: | :------: | :--------------------------------------: |

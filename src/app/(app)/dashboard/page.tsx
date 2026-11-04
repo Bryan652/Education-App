@@ -7,24 +7,25 @@ import { PageSkeleton } from "@/components/layout/page-skeleton";
 import { SubjectBadge } from "@/components/subjects/subject-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDecks } from "@/lib/data/cards";
 import { getGradesBySubject } from "@/lib/data/grades";
 import { getNotes } from "@/lib/data/notes";
 import { getClock, getProfile } from "@/lib/data/profile";
 import { getSchedule } from "@/lib/data/schedule";
 import { getSubjects } from "@/lib/data/subjects";
-import { totalDue } from "@/lib/mock-data";
 import { todayAgenda, upcomingEvents } from "@/lib/schedule/calendar";
 import { cn, formatClock, formatDate, relativeDay } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 async function DashboardContent() {
-  const [profile, { active, archived, terms }, { meetings, events }, { today }, recentNotes] = await Promise.all([
+  const [profile, { active, archived, terms }, { meetings, events }, { today }, recentNotes, decks] = await Promise.all([
     getProfile(),
     getSubjects(),
     getSchedule(),
     getClock(),
     getNotes({ limit: 3 }),
+    getDecks(),
   ]);
   const grades = await getGradesBySubject(active);
 
@@ -37,6 +38,10 @@ async function DashboardContent() {
   const nextUp = upcomingEvents(events, today, subjects)
     .filter((event) => event.startsAt.slice(0, 10) > today)
     .slice(0, 4);
+  // Decks for archived subjects are hidden, so they don't count as cards to review.
+  const totalDue = decks
+    .filter((deck) => active.some((subject) => subject.id === deck.subjectId))
+    .reduce((sum, deck) => sum + deck.dueCount, 0);
   const gradedSubjects = active.filter((subject) => grades.get(subject.id)?.grade.percent !== null);
 
   return (

@@ -1,26 +1,18 @@
-"use client";
-
-import { Suspense } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { PreviewButton } from "@/components/layout/preview-button";
 import { SubjectBadge } from "@/components/subjects/subject-badge";
 import { buttonVariants } from "@/components/ui/button";
-import { decks, dueCount, subjects } from "@/lib/mock-data";
+import type { DeckSummary } from "@/lib/data/cards";
 import { cn } from "@/lib/utils";
-
-const subjectOrder = subjects.map((subject) => subject.id);
-const sortedDecks = [...decks].sort(
-  (a, b) => subjectOrder.indexOf(a.subjectId) - subjectOrder.indexOf(b.subjectId),
-);
-
-function plural(count: number, word: string) {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
-}
 
 interface SubjectOption {
   id: string;
   name: string;
+  color: string;
+}
+
+function plural(count: number, word: string) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
 }
 
 function SubjectFilter({ selectedId, options }: { selectedId: string | null; options: SubjectOption[] }) {
@@ -50,49 +42,61 @@ function SubjectFilter({ selectedId, options }: { selectedId: string | null; opt
   );
 }
 
-function DecksFromUrl({ ownSubjects }: { ownSubjects: SubjectOption[] }) {
-  const searchParams = useSearchParams();
-  const options = [...subjects, ...ownSubjects];
-  // An unknown subject in the URL falls back to showing everything.
-  const subject = options.find((item) => item.id === searchParams.get("subject"));
-  const visible = subject ? sortedDecks.filter((deck) => deck.subjectId === subject.id) : sortedDecks;
-  const due = visible.reduce((sum, deck) => sum + dueCount(deck), 0);
+// The selected subject comes from the URL, so reloading or sharing the link keeps it.
+export function DecksBrowser({
+  decks,
+  subjects,
+  filterSubjects,
+  selected,
+  createDeckButton,
+}: {
+  decks: DeckSummary[];
+  subjects: SubjectOption[];
+  filterSubjects: SubjectOption[];
+  selected: SubjectOption | undefined;
+  createDeckButton: ReactNode;
+}) {
+  const due = decks.reduce((sum, deck) => sum + deck.dueCount, 0);
 
   return (
     <>
-      <SubjectFilter selectedId={subject?.id ?? null} options={options} />
+      {filterSubjects.length > 0 && <SubjectFilter selectedId={selected?.id ?? null} options={filterSubjects} />}
 
-      {visible.length === 0 ? (
+      {decks.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed p-10 text-center">
-          <p className="text-muted-foreground">{subject?.name} doesn&apos;t have any quiz cards yet.</p>
+          <p className="text-muted-foreground">
+            {selected ? `${selected.name} doesn't have any quiz cards yet.` : "You don't have any quiz cards yet."}
+          </p>
           <div className="flex flex-wrap justify-center gap-2">
-            <PreviewButton size="lg" className="px-4">Create a deck</PreviewButton>
-            <Link href="/decks" replace scroll={false} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "px-4")}>
-              Show all subjects
-            </Link>
+            {createDeckButton}
+            {selected && (
+              <Link href="/decks" replace scroll={false} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "px-4")}>
+                Show all subjects
+              </Link>
+            )}
           </div>
         </div>
       ) : (
         <>
           <p role="status" className="mb-4 text-sm text-muted-foreground">
-            {subject ? `${subject.name}: ` : ""}
-            {plural(visible.length, "deck")} · {plural(due, "card")} due
+            {selected ? `${selected.name}: ` : ""}
+            {plural(decks.length, "deck")} · {plural(due, "card")} due
           </p>
           <ul className="grid gap-5 sm:grid-cols-2">
-            {visible.map((deck) => (
+            {decks.map((deck) => (
               <li key={deck.id} className="flex flex-col gap-5 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
                 <div>
-                  <SubjectBadge subjectId={deck.subjectId} />
+                  <SubjectBadge subject={subjects.find((subject) => subject.id === deck.subjectId)} />
                   <h2 className="mt-2.5 font-heading text-xl font-semibold">
                     <Link href={`/decks/${deck.id}`} className="hover:underline">
                       {deck.name}
                     </Link>
                   </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{plural(deck.cards.length, "card")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{plural(deck.cardCount, "card")}</p>
                 </div>
                 <div className="mt-auto flex items-center justify-between gap-3">
                   <p className="text-sm">
-                    <span className="font-heading text-3xl font-semibold tabular-nums">{dueCount(deck)}</span>
+                    <span className="font-heading text-3xl font-semibold tabular-nums">{deck.dueCount}</span>
                     <span className="ml-1.5 text-muted-foreground">due</span>
                   </p>
                   <div className="flex gap-2">
@@ -110,13 +114,5 @@ function DecksFromUrl({ ownSubjects }: { ownSubjects: SubjectOption[] }) {
         </>
       )}
     </>
-  );
-}
-
-export function DecksBrowser({ ownSubjects }: { ownSubjects: SubjectOption[] }) {
-  return (
-    <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-muted" aria-label="Loading decks" />}>
-      <DecksFromUrl ownSubjects={ownSubjects} />
-    </Suspense>
   );
 }

@@ -187,7 +187,7 @@ export function noteExcerpt(note: Note) {
     .trim()
 }
 
-export interface QuizCard {
+interface QuizCard {
   id: string
   front: string
   back: string
@@ -263,8 +263,6 @@ export function getDeck(id: string) {
 export function dueCount(deck: Deck) {
   return deck.cards.filter((card) => card.due).length
 }
-
-export const totalDue = decks.reduce((sum, deck) => sum + dueCount(deck), 0)
 
 function item(id: string, name: string, score: number | null, maxScore: number, gradedOn?: string): GradeItem {
   return { id, name, score, maxScore, gradedOn }

@@ -2,7 +2,7 @@
 
 One place for everything school: your schedule, subjects, notes, quiz cards, grades and an AI study chat. The goal is an open source app that students can use for free.
 
-> **Status: early preview.** Google sign-in, subjects, grades, the schedule and notes work with a real database. Quiz cards still use sample data, and the AI isn't built yet. With no setup, everything runs on sample data.
+> **Status: early preview.** Google sign-in, subjects, grades, the schedule, notes and quiz cards work with a real database. AI chat still uses sample data, and the AI isn't built yet. With no setup, everything runs on sample data.
 
 ## Features
 
@@ -12,7 +12,7 @@ One place for everything school: your schedule, subjects, notes, quiz cards, gra
 |  Subjects  |         Add, edit, archive and delete subjects, each with its own page        |
 |  Schedule  | Week, month and list views; selecting a class opens that subject's quiz cards |
 |   Notes    |        Rich text editor with autosave, search, filters and attachments        |
-| Quiz cards |                     Subject filter, card flip and ratings                     |
+| Quiz cards |          Decks, a subject filter, study mode and spaced repetition            |
 |   Grades   |  Weighted categories, editable grading scales, averages and a weight warning  |
 |  AI chat   |           Past chats and sending messages, with a placeholder reply           |
 |  Settings  |             Profile, terms, grading scales and Google connections             |
@@ -93,7 +93,7 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 |     Calendar    |         FullCalendar         |  In use |
 |   Note editor   |            Tiptap            |  In use |
 | Database, login | Supabase with Google sign-in |  In use |
-|   Quiz timing   |           ts-fsrs            | Planned |
+|   Quiz timing   |           ts-fsrs            |  In use |
 |    AI chatbot   | Each student's own API keys  | Planned |
 |     Hosting     |            Vercel            | Planned |
 
