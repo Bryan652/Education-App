@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUp, FileText, KeyRound, Sparkles, Square } from "lucide
 import { addChatMessage, createChatThread, deleteChatThread } from "@/actions/chat";
 import { ModelPicker } from "@/components/chat/model-picker";
 import { ConfirmDeleteButton } from "@/components/layout/confirm-delete-button";
+import { FreeKeyOptions } from "@/components/settings/free-key-options";
 import { NativeSelect } from "@/components/layout/form-field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -366,15 +367,21 @@ export function ChatConversation({
       )}
 
       {keys.length === 0 ? (
-        <div className="border-t p-4">
-          <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-3">
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <KeyRound className="size-4 shrink-0" aria-hidden />
-              Add an AI key to start chatting. Groq and Gemini both have free plans.
+        <div className="max-h-[60%] overflow-y-auto border-t p-4">
+          <div className="mx-auto flex max-w-2xl flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="flex items-center gap-2 text-sm font-medium">
+                <KeyRound className="size-4 shrink-0" aria-hidden />
+                Add an AI key to start chatting. These are free:
+              </p>
+              <Link href="/settings#ai-keys" className={buttonVariants({ size: "lg", className: "px-3" })}>
+                Add your key
+              </Link>
+            </div>
+            <FreeKeyOptions />
+            <p className="text-xs text-muted-foreground">
+              Create a key on their site, copy it, then add it in Settings. It stays on this device.
             </p>
-            <Link href="/settings" className={buttonVariants({ size: "lg", className: "px-3" })}>
-              Add a key
-            </Link>
           </div>
         </div>
       ) : (

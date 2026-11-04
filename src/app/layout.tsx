@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Instrument_Sans } from "next/font/google";
+import { AppAnalytics } from "@/components/layout/app-analytics";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -30,6 +31,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
           <Toaster position="bottom-center" />
         </ThemeProvider>
+        {/* Its script only exists on Vercel, so local runs and self-hosted copies skip it. */}
+        {process.env.VERCEL && <AppAnalytics />}
       </body>
     </html>
   );

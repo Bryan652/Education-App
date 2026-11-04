@@ -3,13 +3,14 @@ import Link from "next/link";
 import { GraduationCap, Settings } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { UserName } from "@/components/auth/user-name";
-import { BottomNavLinks, SidebarNavLinks, SidebarSettingsLink } from "@/components/layout/nav-links";
+import { BottomNavLinks, LastChatTracker, SidebarNavLinks, SidebarSettingsLink } from "@/components/layout/nav-links";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh lg:pl-60">
+      <LastChatTracker />
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex">
         <Link href="/dashboard" className="flex items-center gap-2.5 px-5 pt-6 pb-7">
           <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">

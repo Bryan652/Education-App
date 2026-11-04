@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   BookOpen,
   CalendarDays,
@@ -12,6 +12,7 @@ import {
   NotebookPen,
   Settings,
 } from "lucide-react";
+import { rememberChat, useLastChatPath } from "@/lib/ai/last-chat";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -23,6 +24,8 @@ const NAV_ITEMS = [
   { href: "/chat", label: "AI chat", shortLabel: "Chat", icon: MessageCircle },
 ];
 
+const CHAT_HOME = "/chat";
+
 const SIDEBAR_LINK =
   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
 const SIDEBAR_LINK_ACTIVE = "bg-sidebar-accent text-sidebar-accent-foreground";
@@ -32,12 +35,14 @@ function isActive(pathname: string, href: string) {
 }
 
 function SidebarItems({ pathname }: { pathname: string }) {
+  const chatPath = useLastChatPath();
+
   return NAV_ITEMS.map((item) => {
     const active = isActive(pathname, item.href);
     return (
       <Link
         key={item.href}
-        href={item.href}
+        href={item.href === CHAT_HOME ? chatPath : item.href}
         aria-current={active ? "page" : undefined}
         className={cn(SIDEBAR_LINK, active && SIDEBAR_LINK_ACTIVE)}
       >
@@ -63,12 +68,14 @@ function SettingsItem({ pathname }: { pathname: string }) {
 }
 
 function BottomItems({ pathname }: { pathname: string }) {
+  const chatPath = useLastChatPath();
+
   return NAV_ITEMS.map((item) => {
     const active = isActive(pathname, item.href);
     return (
       <Link
         key={item.href}
-        href={item.href}
+        href={item.href === CHAT_HOME ? chatPath : item.href}
         aria-current={active ? "page" : undefined}
         className={cn(
           "flex flex-col items-center gap-1 py-2 text-[0.6875rem] font-medium text-muted-foreground",
@@ -80,6 +87,26 @@ function BottomItems({ pathname }: { pathname: string }) {
       </Link>
     );
   });
+}
+
+function ChatTracker() {
+  const pathname = usePathname();
+  const search = useSearchParams().toString();
+
+  useEffect(() => {
+    if (isActive(pathname, CHAT_HOME)) rememberChat(search ? `${pathname}?${search}` : pathname);
+  }, [pathname, search]);
+
+  return null;
+}
+
+/** Remembers which chat is open, so the AI chat link returns to it after visiting other pages. */
+export function LastChatTracker() {
+  return (
+    <Suspense fallback={null}>
+      <ChatTracker />
+    </Suspense>
+  );
 }
 
 function WithPathname({ children }: { children: (pathname: string) => ReactNode }) {

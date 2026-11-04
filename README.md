@@ -12,7 +12,7 @@ One place for everything school: your schedule, subjects, notes, quiz cards, gra
 |  Subjects  |         Add, edit, archive and delete subjects, each with its own page        |
 |  Schedule  | Week, month and list views; selecting a class opens that subject's quiz cards |
 |   Notes    |        Rich text editor with autosave, search, filters and attachments        |
-| Quiz cards |          Decks, a subject filter, study mode and spaced repetition            |
+| Quiz cards |      Decks, a subject filter, study, practice and spaced repetition           |
 |   Grades   |  Weighted categories, editable grading scales, averages and a weight warning  |
 |  AI chat   |  Your own AI keys, a model picker, answers from your notes, cards from a note |
 |  Settings  |         Profile, terms, grading scales, AI keys and Google connections        |

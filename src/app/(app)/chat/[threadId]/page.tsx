@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { ChatConversation } from "@/components/chat/chat-conversation";
 import { ChatLayout } from "@/components/chat/chat-layout";
 import { getNoteContext, getSubjectContext, getThreadById, getThreads } from "@/lib/data/chat";
@@ -17,7 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ChatThreadPage({ params }: Props) {
   const { threadId } = await params;
   const thread = await getThreadById(threadId);
-  if (!thread) notFound();
+  // The AI chat link returns to the last open chat, which may have been deleted since.
+  if (!thread) redirect("/chat");
 
   const [threads, { active, archived }, context] = await Promise.all([
     getThreads(),

@@ -52,7 +52,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="ai-keys" className="scroll-mt-20">
             <CardHeader>
               <CardTitle className="text-lg">AI keys</CardTitle>
               <CardDescription>

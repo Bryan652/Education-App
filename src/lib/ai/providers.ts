@@ -5,6 +5,8 @@ export interface Provider {
   name: string
   // Shown when adding a key, so students know where to start.
   note: string
+  // For providers with a free option, shown to students who don't have a key yet.
+  freeOffer?: string
   keyUrl?: string
   keyPlaceholder?: string
   // For OpenAI-compatible providers. Anthropic goes through its own SDK instead.
@@ -19,6 +21,7 @@ export const PROVIDERS: Provider[] = [
     id: "groq",
     name: "Groq",
     note: "Suggested first key. Has a free plan.",
+    freeOffer: "Suggested first. About 1,000 requests a day.",
     keyUrl: "https://console.groq.com/keys",
     keyPlaceholder: "gsk_…",
     baseUrl: "https://api.groq.com/openai/v1",
@@ -29,6 +32,7 @@ export const PROVIDERS: Provider[] = [
     id: "gemini",
     name: "Gemini",
     note: "Suggested second key. Has a free plan, but free content can be used to improve Google's products.",
+    freeOffer: "Limits vary by model. Google can use free content to improve its products.",
     keyUrl: "https://aistudio.google.com/apikey",
     keyPlaceholder: "AIza…",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
@@ -39,6 +43,7 @@ export const PROVIDERS: Provider[] = [
     id: "openrouter",
     name: "OpenRouter",
     note: "Optional. Has some free models.",
+    freeOffer: "Choose a model marked free. About 50 requests a day.",
     keyUrl: "https://openrouter.ai/keys",
     keyPlaceholder: "sk-or-…",
     baseUrl: "https://openrouter.ai/api/v1",

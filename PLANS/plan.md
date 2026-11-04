@@ -27,7 +27,7 @@ The app will be open source and free, so students don't need to pay for premium 
 
 **Decision: yes.** Each student uses their own API key, so AI costs the project nothing.
 
-- **Keys:** a Settings page lets students add several keys, name them, test them and delete them.
+- **Keys:** a Settings page lets students add several keys, name them, test them and delete them. With no key yet, the chat, Settings and "Make cards" all link to the free options.
 - **Models:** the chat has a picker that lists the models available from the selected key.
 - **Direct calls:** the browser calls the provider directly, so there's no AI server route to pay for.
 - **Limits:** when a key hits its limit, the chat says which key ran out and offers to switch.
@@ -49,10 +49,11 @@ Checked November 2026 by sending each provider a browser preflight request with 
 ### Keeping keys safe
 
 - Keys stay on the student's device. They never go in the database, and they're only sent to the provider they belong to.
-- Anything running on the page could read a stored key, so the app has no ads, no third-party scripts and a Content Security Policy. Its `connect-src` means the page can only send data to this site, Supabase and the listed AI providers.
+- Anything running on the page could read a stored key, so the app has no ads, no third-party scripts apart from Vercel Analytics, and a Content Security Policy. Its `connect-src` means the page can only send data to this site, Supabase and the listed AI providers.
 - The policy still allows inline scripts (`'unsafe-inline'`), which Next.js needs. The stricter nonce version would make every page render on demand, which rules out the static shells behind fast navigation. So `connect-src` is what limits a key leaking, and the app must keep avoiding third-party scripts and raw HTML.
 - Settings has a "Remove all keys" button and an option to forget keys when the tab closes, for shared computers. Signing out also offers to remove them, ticked by default, so the next student can't use a paid key.
 - Settings reminds students to set a spending limit on any paid key.
+- Vercel Analytics only loads on Vercel, from the site's own address. It's Vercel's code, so it's trusted the same way as the hosting itself. Query strings are removed before anything is sent, because they can hold what a student searched for.
 - The chat shows which provider and which note it's sending data to.
 
 ## AI options and prices
@@ -181,7 +182,7 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 - **Step 4:** class times and events are real. The browser fills in the student's time zone on their first visit, and they can change it in Settings. Selecting something on the calendar opens quiz cards, so events are edited from the list below the calendar.
 - **Step 5:** notes save automatically as JSON, search matches the start of words, and attachments go straight from the browser to Storage. Each file can be up to 10 MB, and each student can store 50 MB, which Supabase enforces as well as the app. These limits can change, and the plan's cost estimates assume about 20 MB per student.
 
-**Step 6 status:** the code is done and tested against a full local copy of Supabase. It still needs `npm run db:push` on the real project, then the updated code deployed. Decks, cards, the subject filter, study mode and spaced repetition are real. Reviews are scheduled in whole days, with "Again" repeating the card later in the same session. "Make cards" on a note stays a placeholder until step 7.
+**Step 6 status:** the code is done and tested against a full local copy of Supabase. It still needs `npm run db:push` on the real project, then the updated code deployed. Decks, cards, the subject filter, study mode and spaced repetition are real. Reviews are scheduled in whole days, with "Again" repeating the card later in the same session. Students can also practice a deck's cards any time, which doesn't change their schedule or study history, so extra practice can't throw off the spacing. "Make cards" on a note stays a placeholder until step 7.
 
 **Step 7 status:** the code is done and tested against a full local copy of Supabase, with provider replies simulated. It still needs `npm run db:push` on the real project, then the updated code deployed, then trying with a real key. Keys, the model picker, chat, and making cards from a note are real, and signed-in students no longer see any sample data. The app sends a limited amount of each note and chat, to stay within free plans, and tells the student when it's cut something.
 

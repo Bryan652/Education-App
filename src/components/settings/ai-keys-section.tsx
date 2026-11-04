@@ -5,6 +5,7 @@ import { CircleCheck, CircleX, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { fieldA11y, FormField, NativeSelect } from "@/components/layout/form-field";
 import { FormDialog } from "@/components/layout/form-dialog";
+import { FreeKeyOptions } from "@/components/settings/free-key-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AiError, testKey } from "@/lib/ai/client";
@@ -167,9 +168,10 @@ export function AiKeysSection() {
   return (
     <div className="flex flex-col gap-3">
       {keys.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          You haven&apos;t added any keys yet. Groq and Gemini both have free plans, so they&apos;re good ones to start with.
-        </p>
+        <>
+          <p className="text-sm text-muted-foreground">You haven&apos;t added any keys yet. These are free:</p>
+          <FreeKeyOptions />
+        </>
       ) : (
         <ul className="flex flex-col gap-2">
           {keys.map((aiKey) => (

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, X } from "lucide-react";
 import { toast } from "sonner";
 import { reviewCard } from "@/actions/cards";
@@ -9,6 +10,11 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { intervalLabels, RATINGS, scheduleReview, type CardRating } from "@/lib/cards/scheduler";
 import type { CardRecord } from "@/lib/data/cards";
 import { cn } from "@/lib/utils";
+
+const PRACTICE_BUTTONS = [
+  { value: 1, label: "Again" },
+  { value: 3, label: "Got it" },
+] as const;
 
 // Long cards get smaller text so they still fit on the card.
 function cardTextClass(text: string) {
@@ -25,21 +31,24 @@ function CardText({ text }: { text: string }) {
   );
 }
 
-// Saving every rating refreshes the page's cards, so the session works from its own copy and isn't
-// reshuffled partway through. The fresh list is only used to offer more cards at the end.
-export function StudySession({
-  deckId,
-  deckName,
-  cards,
-  saves,
-}: {
+interface StudySessionProps {
   deckId: string;
   deckName: string;
+  // The cards due now.
   cards: CardRecord[];
+  // Every card in the deck, for practicing whenever a student likes.
+  allCards: CardRecord[];
+  // When the next card comes due, in words, like "Tomorrow".
+  nextDue: string | null;
   saves: boolean;
-}) {
+}
+
+// Saving every rating refreshes the page's cards, so the session works from its own copy and isn't
+// reshuffled partway through. The fresh list is only used to offer more cards at the end.
+function Session({ deckId, deckName, cards, allCards, nextDue, saves }: StudySessionProps) {
   const [queue, setQueue] = useState(cards);
   const [total, setTotal] = useState(cards.length);
+  const [practicing, setPracticing] = useState(false);
   const [flipped, setFlipped] = useState(false);
   const [turn, setTurn] = useState(0);
   const [saving, setSaving] = useState(0);
@@ -48,11 +57,26 @@ export function StudySession({
   const current = queue[0];
   const finished = total - new Set(queue.map((card) => card.id)).size;
 
+  function startPractice() {
+    setPracticing(true);
+    setQueue(allCards);
+    setTotal(allCards.length);
+    setFlipped(false);
+    setTurn((value) => value + 1);
+  }
+
   const rate = useCallback(
     (rating: CardRating) => {
       if (!current) return;
       setFlipped(false);
       setTurn((value) => value + 1);
+
+      // Practice is extra, so it never touches the review schedule or the study history.
+      if (practicing) {
+        setQueue(([first, ...rest]) => (rating === 1 ? [...rest, first] : rest));
+        return;
+      }
+
       setQueue(([first, ...rest]) =>
         // "Again" comes back at the end of this session, with its new state so the buttons stay right.
         rating === 1 ? [...rest, { ...first, state: scheduleReview(first.state, 1, new Date()).state }] : rest,
@@ -67,7 +91,7 @@ export function StudySession({
         .catch(() => toast("Couldn't save that rating, so the card will come up again."))
         .finally(() => setSaving((count) => count - 1));
     },
-    [current, saves],
+    [current, practicing, saves],
   );
 
   useEffect(() => {
@@ -85,18 +109,28 @@ export function StudySession({
   }, [current, flipped, rate]);
 
   if (!current) {
-    // Next.js keeps this page around after leaving it, so more cards may be due by the time they return.
-    const moreDue = saves && saving === 0 ? cards.length : 0;
+    // More cards may have come due since this session started.
+    const moreDue = !practicing && saves && saving === 0 ? cards.length : 0;
+    const title = practicing ? "Practice done" : total ? "All done" : "Nothing due";
+    const description = practicing
+      ? `You practiced ${total} ${total === 1 ? "card" : "cards"} from ${deckName}.`
+      : total
+        ? `You reviewed ${total} ${total === 1 ? "card" : "cards"} from ${deckName}.`
+        : allCards.length
+          ? `${deckName} has no cards to review right now.`
+          : `${deckName} doesn't have any cards yet.`;
 
     return (
       <div className="mx-auto flex max-w-md flex-col items-center py-16 text-center">
         <CheckCircle2 className="size-12 text-chart-2" aria-hidden />
-        <h1 className="mt-5 font-heading text-3xl font-semibold">{total ? "All done" : "Nothing due"}</h1>
-        <p className="mt-2 text-muted-foreground">
-          {total
-            ? `You reviewed ${total} ${total === 1 ? "card" : "cards"} from ${deckName}.`
-            : `${deckName} has no cards to review right now.`}
-        </p>
+        <h1 className="mt-5 font-heading text-3xl font-semibold">{title}</h1>
+        <p className="mt-2 text-muted-foreground">{description}</p>
+        {nextDue && <p className="mt-1 text-muted-foreground">Next review: {nextDue}.</p>}
+        {allCards.length > 0 && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            You can practice any time. It won&apos;t change your review schedule.
+          </p>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {moreDue > 0 && (
             <Button
@@ -111,7 +145,12 @@ export function StudySession({
               Study {moreDue} more
             </Button>
           )}
-          <Link href={`/decks/${deckId}`} className={cn(buttonVariants({ size: "lg", variant: moreDue > 0 ? "outline" : "default" }), "px-4")}>
+          {allCards.length > 0 && (
+            <Button size="lg" variant={moreDue > 0 ? "outline" : "default"} className="px-4" onClick={startPractice}>
+              {practicing ? "Practice again" : "Practice all cards"}
+            </Button>
+          )}
+          <Link href={`/decks/${deckId}`} className={cn(buttonVariants({ size: "lg", variant: "outline" }), "px-4")}>
             Back to deck
           </Link>
         </div>
@@ -119,7 +158,7 @@ export function StudySession({
     );
   }
 
-  const intervals = flipped ? intervalLabels(current.state, startedAt) : null;
+  const intervals = flipped && !practicing ? intervalLabels(current.state, startedAt) : null;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -162,7 +201,11 @@ export function StudySession({
       </div>
 
       <div className="mt-6 grid min-h-16 grid-cols-2 gap-2 sm:grid-cols-4">
-        {intervals ? (
+        {!flipped ? (
+          <Button onClick={() => setFlipped(true)} className="col-span-full h-12 text-base">
+            Show answer
+          </Button>
+        ) : intervals ? (
           RATINGS.map((rating) => (
             <Button
               key={rating.value}
@@ -175,11 +218,34 @@ export function StudySession({
             </Button>
           ))
         ) : (
-          <Button onClick={() => setFlipped(true)} className="col-span-full h-12 text-base">
-            Show answer
-          </Button>
+          PRACTICE_BUTTONS.map((button) => (
+            <Button
+              key={button.value}
+              variant={button.value === 3 ? "default" : "outline"}
+              onClick={() => rate(button.value)}
+              className="col-span-1 h-12 text-base sm:col-span-2"
+            >
+              {button.label}
+            </Button>
+          ))
         )}
       </div>
+
+      {practicing && (
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          You&apos;re practicing, so this won&apos;t change your review schedule.
+        </p>
+      )}
     </div>
   );
+}
+
+/**
+ * Next.js keeps visited pages alive, which would bring back a finished session when a student
+ * presses Study again. This key starts a new session on each visit, while the browser's Back
+ * button still returns to where they were.
+ */
+export function StudySession(props: StudySessionProps) {
+  const { bfcacheId } = useRouter();
+  return <Session key={bfcacheId} {...props} />;
 }

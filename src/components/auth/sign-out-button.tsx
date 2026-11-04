@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { removeAllAiKeys, useAiKeys } from "@/lib/ai/keys";
+import { forgetLastChat } from "@/lib/ai/last-chat";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -36,6 +37,7 @@ export function SignOutButton({ iconOnly = false }: { iconOnly?: boolean }) {
       }
     }
     if (removeKeys) removeAllAiKeys();
+    forgetLastChat();
     // A full page load clears the pages Next.js keeps hidden, so private data doesn't stay in memory.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- see above
     window.location.assign("/login");

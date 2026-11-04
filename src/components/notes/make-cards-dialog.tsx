@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { createDeckFromNote } from "@/actions/cards";
 import { ModelPicker } from "@/components/chat/model-picker";
 import { FormField } from "@/components/layout/form-field";
+import { FreeKeyOptions } from "@/components/settings/free-key-options";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -105,10 +106,11 @@ function MakeCardsForm({
 
   if (choice.keys.length === 0) {
     return (
-      <div className="flex flex-col items-start gap-3">
-        <p className="text-sm text-muted-foreground">Add an AI key first. Groq and Gemini both have free plans.</p>
-        <Link href="/settings" className={buttonVariants({ size: "lg", className: "px-3" })}>
-          Add a key
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">Add an AI key first. These are free:</p>
+        <FreeKeyOptions />
+        <Link href="/settings#ai-keys" className={buttonVariants({ size: "lg", className: "w-fit px-3" })}>
+          Add your key
         </Link>
       </div>
     );
