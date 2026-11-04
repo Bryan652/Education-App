@@ -5,18 +5,19 @@ import { TriangleAlert } from "lucide-react";
 import { CategoryCard } from "@/components/grades/category-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
-import { categoriesFor, getSubject, gradeFor } from "@/lib/mock-data";
+import { getSubjectById } from "@/lib/data/subjects";
+import { categoriesFor, getSubject as getSampleSubject, gradeFor } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ subjectId: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { subjectId } = await params;
-  return { title: `${getSubject(subjectId)?.name ?? "Subject"} grades` };
+  return { title: `${getSampleSubject(subjectId)?.name ?? "Subject"} grades` };
 }
 
 export default async function SubjectGradesPage({ params }: Props) {
   const { subjectId } = await params;
-  const subject = getSubject(subjectId);
+  const subject = await getSubjectById(subjectId);
   if (!subject) notFound();
 
   const grade = gradeFor(subject.id);
@@ -60,13 +61,19 @@ export default async function SubjectGradesPage({ params }: Props) {
         </div>
       </div>
 
-      {grade.totalWeight !== 100 && (
+      {categories.length > 0 && grade.totalWeight !== 100 && (
         <p
           role="status"
           className="mb-6 flex items-start gap-2.5 rounded-lg bg-highlight/50 px-4 py-3 text-sm text-highlight-foreground"
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           Your category weights add up to {grade.totalWeight}, not 100. Check your syllabus so this grade is accurate.
+        </p>
+      )}
+
+      {categories.length === 0 && (
+        <p className="mb-6 rounded-xl border border-dashed p-10 text-center text-muted-foreground">
+          No grades for this subject yet.
         </p>
       )}
 

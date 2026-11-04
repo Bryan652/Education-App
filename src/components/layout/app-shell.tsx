@@ -4,6 +4,7 @@ import { GraduationCap, Settings } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { UserName } from "@/components/auth/user-name";
 import { BottomNavLinks, SidebarNavLinks, SidebarSettingsLink } from "@/components/layout/nav-links";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -25,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between gap-2 px-3 py-2">
             <div className="min-w-0">
               <UserName />
-              <p className="text-xs">Sample data</p>
+              <p className="text-xs">{isSupabaseConfigured ? "Some sample data" : "Sample data"}</p>
             </div>
             <SignOutButton iconOnly />
           </div>

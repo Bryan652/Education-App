@@ -170,7 +170,9 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 8. **Google integration:** connect only the services that are needed.
 9. **Ready to grow:** add data export and self-hosting instructions.
 
-**Step 1 status:** Google sign-in works locally on the real Supabase project. Deployment is still in progress, using the steps in the [README](../README.md). Pages show sample data until step 2. Alerts need nothing while on free plans with no payment card, so set them up when moving to a paid plan.
+**Step 1 status:** done. Google sign-in works locally and on the deployed Vercel site with the real Supabase project. Pages show sample data until step 2. Alerts need nothing while on free plans with no payment card, so set them up when moving to a paid plan.
+
+**Step 2 status:** the code is done and tested against a local stand-in for Supabase. It still needs `npm run db:push` on the real project, then the updated code deployed. Subjects and terms are real, including create, edit, archive, restore and delete. Other pages keep showing sample subjects until their own steps.
 
 ## Things to watch for
 

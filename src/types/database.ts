@@ -38,6 +38,101 @@ export type Database = {
         }
         Relationships: []
       }
+      subjects: {
+        Row: {
+          archived_at: string | null
+          code: string | null
+          color: string | null
+          created_at: string
+          id: string
+          instructor: string | null
+          name: string
+          term_id: string | null
+          units: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          code?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          instructor?: string | null
+          name: string
+          term_id?: string | null
+          units?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          instructor?: string | null
+          name?: string
+          term_id?: string | null
+          units?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_term_fkey"
+            columns: ["term_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "subjects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      terms: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terms_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -35,7 +35,7 @@ Every table has these columns unless its section says otherwise. They aren't rep
 | `created_at` | `timestamptz` |   Yes    |               Default `now()`               |
 | `updated_at` | `timestamptz` |   Yes    |               Default `now()`               |
 
-Row-level security is on for every table. Users can only access rows where `user_id = auth.uid()`.
+Row-level security is on for every table. Users can only access rows where `user_id = auth.uid()`. `user_id` defaults to `auth.uid()`, and the app can't set or change it.
 
 ## Account
 
@@ -81,6 +81,10 @@ The `id` references `auth.users(id)` on delete cascade. There is no `user_id`, a
 |      `color`       |     `text`     |    No    |                                                                     |
 |      `units`       | `numeric(4,2)` |    No    |                          Used to weight GPA                         |
 |   `archived_at`    | `timestamptz`  |    No    |                          Null while active                          |
+
+A subject's `term_id` must point at a term with the same `user_id`, so a student can't attach a subject to someone else's term. Deleting a term only clears `term_id`.
+
+Names can be up to 100 characters, `code` up to 30, and `instructor` up to 100. `color` must be a hex color like `#2f6fb0`, and `units` can't be negative. A term's `end_date` can't be before its `start_date`.
 
 ## Schedule
 

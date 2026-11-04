@@ -1,15 +1,16 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { CalendarDays, FolderOpen, GraduationCap, LogIn, Plus } from "lucide-react";
+import { CalendarDays, FolderOpen, GraduationCap, LogIn } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
+import { TermsSection } from "@/components/settings/terms-section";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { gradingScale, profile, term } from "@/lib/mock-data";
+import { gradingScale, profile } from "@/lib/mock-data";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -19,8 +20,6 @@ const GOOGLE_SERVICES = [
   { icon: GraduationCap, name: "Google Classroom", description: "Import courses and work", status: "Not connected" },
   { icon: FolderOpen, name: "Google Drive", description: "Attach files to notes", status: "Not connected" },
 ];
-
-const shortDate: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
 
 export default function SettingsPage() {
   return (
@@ -54,16 +53,9 @@ export default function SettingsPage() {
               <CardDescription>Subjects and class times belong to a term.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <div className="rounded-lg bg-muted px-3.5 py-3">
-                <p className="text-sm font-medium">{term.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(term.startDate, shortDate)} – {formatDate(term.endDate, shortDate)}
-                </p>
-              </div>
-              <PreviewButton variant="outline" size="lg" className="w-fit">
-                <Plus aria-hidden />
-                Add term
-              </PreviewButton>
+              <Suspense fallback={<div className="h-16 animate-pulse rounded-lg bg-muted" aria-label="Loading terms" />}>
+                <TermsSection />
+              </Suspense>
             </CardContent>
           </Card>
 

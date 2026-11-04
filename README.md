@@ -2,14 +2,14 @@
 
 One place for everything school: your schedule, subjects, notes, quiz cards, grades and an AI study chat. The goal is an open source app that students can use for free.
 
-> **Status: early preview.** Every main screen works with sample data, but nothing is saved yet. Google sign-in and the database are ready to connect, and the AI isn't built yet.
+> **Status: early preview.** Google sign-in, subjects and terms work with a real database. Other screens still use sample data, and the AI isn't built yet. With no setup, everything runs on sample data.
 
 ## Features
 
-|  Feature   |                                 In the preview                                |
+|  Feature   |                                What's there now                               |
 | :--------: | :---------------------------------------------------------------------------: |
 | Dashboard  |            Today's classes, cards due, deadlines, grades and notes            |
-|  Subjects  |            A page for each subject, with its grades and class times           |
+|  Subjects  |         Add, edit, archive and delete subjects, each with its own page        |
 |  Schedule  | Week, month and list views; selecting a class opens that subject's quiz cards |
 |   Notes    |                      Rich text editor, search and filters                     |
 | Quiz cards |                     Subject filter, card flip and ratings                     |
@@ -26,7 +26,7 @@ npm install
 npm run dev
 ```
 
-Then open <http://localhost:3000>. With no setup, the app runs on sample data with no login.
+Then open <http://localhost:3000>. No account is needed for this preview.
 
 ## Connect sign-in and the database
 

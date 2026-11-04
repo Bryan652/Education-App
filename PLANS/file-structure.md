@@ -35,6 +35,7 @@ Education-App/
         callback/route.ts    Finishes Google sign-in
       (app)/                 Pages that require login
         layout.tsx           Sidebar and top navigation
+        error.tsx            Shown when a page's data won't load
         dashboard/
           page.tsx           Today's classes, deadlines and cards due
         subjects/
@@ -74,6 +75,7 @@ Education-App/
       ui/                    shadcn/ui components
       auth/                  Sign-in and sign-out
       layout/
+      settings/              Terms and other settings sections
       subjects/
       schedule/
       notes/
@@ -100,6 +102,7 @@ Education-App/
       google/
         tokens.ts            Encrypts, stores and refreshes tokens
         calendar.ts          Google Calendar calls
+      data/                  Reads student data for pages, one file per feature
       validation/            Zod schemas for form and API input
       mock-data.ts           Temporary sample data for the UI preview
       utils.ts
