@@ -170,7 +170,7 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 8. **Google integration:** connect only the services that are needed.
 9. **Ready to grow:** add data export and self-hosting instructions.
 
-**Step 1 status:** the code is done and tested, and it's waiting on accounts. Google sign-in hasn't been tried with a real account yet, and pages still show sample data until step 2. The setup steps are in the [README](../README.md). Alerts need nothing while on free plans with no payment card, so set them up when moving to a paid plan.
+**Step 1 status:** Google sign-in works locally on the real Supabase project. Deployment is still in progress, using the steps in the [README](../README.md). Pages show sample data until step 2. Alerts need nothing while on free plans with no payment card, so set them up when moving to a paid plan.
 
 ## Things to watch for
 

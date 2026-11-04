@@ -68,9 +68,9 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 ## Deploy
 
 1. Push the code to GitHub, then import the repository at [vercel.com](https://vercel.com).
-2. Add the same two values from `.env.local` as environment variables in Vercel.
+2. In Vercel, add the same two values from your env file under **Environment Variables**, using the **Config** type, then redeploy. They're public by design, and the app only picks them up at build time.
 3. Add your Vercel URL to **Authorized JavaScript origins** in Google Cloud.
-4. Add `https://YOUR_APP.vercel.app/**` to **Redirect URLs** in Supabase, and set **Site URL** to your Vercel URL.
+4. Add `https://YOUR_APP.vercel.app/**` to **Redirect URLs** in Supabase, and set **Site URL** to your Vercel URL. Keep `http://localhost:3000/**` so local sign-in still works.
 
 ## Commands
 
