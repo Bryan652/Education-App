@@ -1,15 +1,12 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { CalendarDays, FolderOpen, GraduationCap, LogIn } from "lucide-react";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
+import { GradingScalesSection } from "@/components/settings/grading-scales-section";
+import { ProfileSection } from "@/components/settings/profile-section";
 import { TermsSection } from "@/components/settings/terms-section";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { gradingScale, profile } from "@/lib/mock-data";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -21,6 +18,10 @@ const GOOGLE_SERVICES = [
   { icon: FolderOpen, name: "Google Drive", description: "Attach files to notes", status: "Not connected" },
 ];
 
+function SectionSkeleton({ label }: { label: string }) {
+  return <div className="h-16 animate-pulse rounded-lg bg-muted" aria-label={label} />;
+}
+
 export default function SettingsPage() {
   return (
     <>
@@ -31,19 +32,10 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="text-lg">Profile</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue={profile.name} className="h-10" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="timezone">Time zone</Label>
-                <Input id="timezone" defaultValue={profile.timezone} className="h-10" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <PreviewButton size="lg" className="w-fit px-4">Save changes</PreviewButton>
-                <SignOutButton />
-              </div>
+            <CardContent>
+              <Suspense fallback={<SectionSkeleton label="Loading profile" />}>
+                <ProfileSection />
+              </Suspense>
             </CardContent>
           </Card>
 
@@ -53,7 +45,7 @@ export default function SettingsPage() {
               <CardDescription>Subjects and class times belong to a term.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <Suspense fallback={<div className="h-16 animate-pulse rounded-lg bg-muted" aria-label="Loading terms" />}>
+              <Suspense fallback={<SectionSkeleton label="Loading terms" />}>
                 <TermsSection />
               </Suspense>
             </CardContent>
@@ -88,32 +80,16 @@ export default function SettingsPage() {
         </div>
 
         <Card>
-          <CardHeader className="flex items-start justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg">Grading scale</CardTitle>
-              <CardDescription className="mt-1">Used to turn percentages into grades.</CardDescription>
-            </div>
-            <PreviewButton variant="outline" size="lg">Edit</PreviewButton>
+          <CardHeader>
+            <CardTitle className="text-lg">Grading scales</CardTitle>
+            <CardDescription className="mt-1">
+              Choose the system your school uses. Subjects use your default unless you pick another for them.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Grade</TableHead>
-                  <TableHead className="text-right">Minimum</TableHead>
-                  <TableHead className="text-right">Grade points</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {gradingScale.map((band) => (
-                  <TableRow key={band.label}>
-                    <TableCell className="font-medium">{band.label}</TableCell>
-                    <TableCell className="text-right tabular-nums">{band.minPercent}%</TableCell>
-                    <TableCell className="text-right tabular-nums">{band.gradePoint.toFixed(1)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Suspense fallback={<SectionSkeleton label="Loading grading scales" />}>
+              <GradingScalesSection />
+            </Suspense>
           </CardContent>
         </Card>
       </div>

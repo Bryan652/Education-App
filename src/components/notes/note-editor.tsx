@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, type Content, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Bold, Code, Heading2, Italic, List, ListOrdered, Quote, Redo2, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,15 @@ function ToolbarButton({
   );
 }
 
-export function NoteEditor({ content }: { content: string }) {
+export function NoteEditor({
+  content,
+  status,
+  onChange,
+}: {
+  content: Content;
+  status: ReactNode;
+  onChange?: (content: JSONContent) => void;
+}) {
   const editor = useEditor({
     extensions: [StarterKit],
     content,
@@ -48,6 +56,7 @@ export function NoteEditor({ content }: { content: string }) {
     editorProps: {
       attributes: { "aria-label": "Note content" },
     },
+    onUpdate: ({ editor: updated }) => onChange?.(updated.getJSON()),
   });
 
   return (
@@ -89,7 +98,7 @@ export function NoteEditor({ content }: { content: string }) {
         <ToolbarButton label="Redo" disabled={!editor?.can().redo()} onClick={() => editor?.chain().focus().redo().run()}>
           <Redo2 aria-hidden />
         </ToolbarButton>
-        <span className="ml-auto px-2 text-xs text-muted-foreground">Changes aren&apos;t saved in this preview</span>
+        <span className="ml-auto px-2 text-xs text-muted-foreground">{status}</span>
       </div>
       <EditorContent editor={editor} className="note-content" />
     </>

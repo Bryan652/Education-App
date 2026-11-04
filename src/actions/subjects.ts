@@ -3,29 +3,31 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { NOTE_FILES_BUCKET } from "@/lib/notes/limits";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/server";
-import { idSchema, subjectSchema, type ActionResult, type FormState } from "@/lib/validation/subjects";
+import { signedInClient } from "@/lib/supabase/server";
+import {
+  idSchema,
+  PREVIEW_MESSAGE,
+  SIGNED_OUT_MESSAGE,
+  subjectSchema,
+  type ActionResult,
+  type FormState,
+} from "@/lib/validation/subjects";
 
-const PREVIEW_MESSAGE = "This is a preview, so nothing is saved yet.";
-const SIGNED_OUT_MESSAGE = "Please sign in again, then try once more.";
 const MISSING_MESSAGE = "That subject no longer exists.";
 
-// Row-level security enforces who owns what. This check just gives a clearer message.
-async function signedInClient() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  return data?.claims ? supabase : null;
-}
-
+// Subjects appear on nearly every page.
 function refreshSubjectPages() {
-  revalidatePath("/subjects", "layout");
+  revalidatePath("/", "layout");
 }
 
-function saveError(code: string | undefined): FormState {
-  // A foreign key error here means the chosen term was deleted, perhaps in another tab.
-  if (code === "23503") {
-    return { status: "error", fieldErrors: { term_id: ["That term no longer exists. Choose another."] } };
+function saveError(error: { code: string; message: string }): FormState {
+  // A foreign key error here means the chosen term or scale was deleted, perhaps in another tab.
+  if (error.code === "23503") {
+    return error.message.includes("subjects_grading_scale_fkey")
+      ? { status: "error", fieldErrors: { grading_scale_id: ["That grading scale no longer exists. Choose another."] } }
+      : { status: "error", fieldErrors: { term_id: ["That term no longer exists. Choose another."] } };
   }
   return { status: "error", message: "Couldn't save this subject. Please try again." };
 }
@@ -38,6 +40,7 @@ function parseSubject(formData: FormData) {
     color: formData.get("color") ?? "",
     units: formData.get("units") ?? "",
     term_id: formData.get("term_id") ?? "",
+    grading_scale_id: formData.get("grading_scale_id") ?? "",
   });
 }
 
@@ -47,11 +50,11 @@ export async function createSubject(_previous: FormState, formData: FormData): P
   const parsed = parseSubject(formData);
   if (!parsed.success) return { status: "error", fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
-  const supabase = await signedInClient();
-  if (!supabase) return { status: "error", message: SIGNED_OUT_MESSAGE };
+  const session = await signedInClient();
+  if (!session) return { status: "error", message: SIGNED_OUT_MESSAGE };
 
-  const { error } = await supabase.from("subjects").insert(parsed.data);
-  if (error) return saveError(error.code);
+  const { error } = await session.supabase.from("subjects").insert(parsed.data);
+  if (error) return saveError(error);
 
   refreshSubjectPages();
   return { status: "success", message: `Added ${parsed.data.name}.` };
@@ -64,12 +67,12 @@ export async function updateSubject(id: string, _previous: FormState, formData: 
   const parsed = parseSubject(formData);
   if (!parsed.success) return { status: "error", fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
-  const supabase = await signedInClient();
-  if (!supabase) return { status: "error", message: SIGNED_OUT_MESSAGE };
+  const session = await signedInClient();
+  if (!session) return { status: "error", message: SIGNED_OUT_MESSAGE };
 
   // Row-level security turns someone else's subject into zero rows, not an error, so check the count.
-  const { data, error } = await supabase.from("subjects").update(parsed.data).eq("id", id).select("id");
-  if (error) return saveError(error.code);
+  const { data, error } = await session.supabase.from("subjects").update(parsed.data).eq("id", id).select("id");
+  if (error) return saveError(error);
   if (data.length === 0) return { status: "error", message: MISSING_MESSAGE };
 
   refreshSubjectPages();
@@ -80,10 +83,10 @@ async function setArchived(id: string, archivedAt: string | null, done: string):
   if (!isSupabaseConfigured) return { ok: false, message: PREVIEW_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, message: MISSING_MESSAGE };
 
-  const supabase = await signedInClient();
-  if (!supabase) return { ok: false, message: SIGNED_OUT_MESSAGE };
+  const session = await signedInClient();
+  if (!session) return { ok: false, message: SIGNED_OUT_MESSAGE };
 
-  const { data, error } = await supabase
+  const { data, error } = await session.supabase
     .from("subjects")
     .update({ archived_at: archivedAt })
     .eq("id", id)
@@ -107,11 +110,23 @@ export async function deleteSubject(id: string): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { ok: false, message: PREVIEW_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, message: MISSING_MESSAGE };
 
-  const supabase = await signedInClient();
-  if (!supabase) return { ok: false, message: SIGNED_OUT_MESSAGE };
+  const session = await signedInClient();
+  if (!session) return { ok: false, message: SIGNED_OUT_MESSAGE };
+  const { supabase } = session;
+
+  const failed: ActionResult = { ok: false, message: "Couldn't delete this subject. Please try again." };
+
+  // Deleting the subject removes its notes' rows, but not their stored files, so those go first.
+  const files = await supabase.from("note_files").select("storage_path, notes!inner(subject_id)").eq("notes.subject_id", id);
+  if (files.error) return failed;
+
+  if (files.data.length > 0) {
+    const removal = await supabase.storage.from(NOTE_FILES_BUCKET).remove(files.data.map((file) => file.storage_path));
+    if (removal.error) return failed;
+  }
 
   const { data, error } = await supabase.from("subjects").delete().eq("id", id).select("id");
-  if (error) return { ok: false, message: "Couldn't delete this subject. Please try again." };
+  if (error) return failed;
   if (data.length === 0) return { ok: false, message: MISSING_MESSAGE };
 
   refreshSubjectPages();

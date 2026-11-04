@@ -20,13 +20,22 @@ export interface Term {
 export interface SubjectRecord extends Subject {
   termId: string | null;
   termName: string | null;
+  // Null means the subject uses the student's default grading scale.
+  gradingScaleId: string | null;
   archivedAt: string | null;
   // Sample subjects are read-only. Other pages still link to them until their build steps.
   isSample: boolean;
 }
 
 function toSampleRecord(subject: Subject): SubjectRecord {
-  return { ...subject, termId: sampleTerm.id, termName: sampleTerm.name, archivedAt: null, isSample: true };
+  return {
+    ...subject,
+    termId: sampleTerm.id,
+    termName: sampleTerm.name,
+    gradingScaleId: null,
+    archivedAt: null,
+    isSample: true,
+  };
 }
 
 function toRecord(row: Tables<"subjects">, terms: Term[]): SubjectRecord {
@@ -39,6 +48,7 @@ function toRecord(row: Tables<"subjects">, terms: Term[]): SubjectRecord {
     units: row.units ?? 0,
     termId: row.term_id,
     termName: terms.find((term) => term.id === row.term_id)?.name ?? null,
+    gradingScaleId: row.grading_scale_id,
     archivedAt: row.archived_at,
     isSample: false,
   };

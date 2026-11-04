@@ -1,22 +1,18 @@
-"use client";
+import { Suspense } from "react";
+import { getProfile } from "@/lib/data/profile";
 
-import { useEffect, useState } from "react";
-import { profile } from "@/lib/mock-data";
-import { createClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+const nameClass = "min-h-5 truncate text-sm font-medium text-sidebar-accent-foreground";
 
-// Row-level security only returns the signed-in student's own profile, so no ID is needed.
+async function LoadedName() {
+  const { displayName } = await getProfile();
+  return <p className={nameClass}>{displayName || "Student"}</p>;
+}
+
+// Read on the server, so it updates along with everything else when the student edits their profile.
 export function UserName() {
-  const [name, setName] = useState(isSupabaseConfigured ? "" : profile.name);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    createClient()
-      .from("profiles")
-      .select("display_name")
-      .maybeSingle()
-      .then(({ data }) => setName(data?.display_name || "Student"));
-  }, []);
-
-  return <p className="min-h-5 truncate text-sm font-medium text-sidebar-accent-foreground">{name}</p>;
+  return (
+    <Suspense fallback={<p className={nameClass} />}>
+      <LoadedName />
+    </Suspense>
+  );
 }

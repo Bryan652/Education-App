@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { PreviewButton } from "@/components/layout/preview-button";
 import { SubjectBadge } from "@/components/subjects/subject-badge";
 import { buttonVariants } from "@/components/ui/button";
-import { decks, dueCount, getSubject, subjects } from "@/lib/mock-data";
+import { decks, dueCount, subjects } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const subjectOrder = subjects.map((subject) => subject.id);
@@ -18,8 +18,13 @@ function plural(count: number, word: string) {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
 }
 
-function SubjectFilter({ selectedId }: { selectedId: string | null }) {
-  const filters = [{ id: null as string | null, name: "All subjects" }, ...subjects];
+interface SubjectOption {
+  id: string;
+  name: string;
+}
+
+function SubjectFilter({ selectedId, options }: { selectedId: string | null; options: SubjectOption[] }) {
+  const filters = [{ id: null as string | null, name: "All subjects" }, ...options];
 
   return (
     <nav className="mb-5 flex flex-wrap gap-2" aria-label="Filter by subject">
@@ -27,7 +32,7 @@ function SubjectFilter({ selectedId }: { selectedId: string | null }) {
         const selected = selectedId === filter.id;
         return (
           <Link
-            key={filter.name}
+            key={filter.id ?? "all"}
             href={filter.id ? `/decks?subject=${filter.id}` : "/decks"}
             replace
             scroll={false}
@@ -45,16 +50,17 @@ function SubjectFilter({ selectedId }: { selectedId: string | null }) {
   );
 }
 
-function DecksFromUrl() {
+function DecksFromUrl({ ownSubjects }: { ownSubjects: SubjectOption[] }) {
   const searchParams = useSearchParams();
+  const options = [...subjects, ...ownSubjects];
   // An unknown subject in the URL falls back to showing everything.
-  const subject = getSubject(searchParams.get("subject") ?? "");
+  const subject = options.find((item) => item.id === searchParams.get("subject"));
   const visible = subject ? sortedDecks.filter((deck) => deck.subjectId === subject.id) : sortedDecks;
   const due = visible.reduce((sum, deck) => sum + dueCount(deck), 0);
 
   return (
     <>
-      <SubjectFilter selectedId={subject?.id ?? null} />
+      <SubjectFilter selectedId={subject?.id ?? null} options={options} />
 
       {visible.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed p-10 text-center">
@@ -107,10 +113,10 @@ function DecksFromUrl() {
   );
 }
 
-export function DecksBrowser() {
+export function DecksBrowser({ ownSubjects }: { ownSubjects: SubjectOption[] }) {
   return (
     <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-muted" aria-label="Loading decks" />}>
-      <DecksFromUrl />
+      <DecksFromUrl ownSubjects={ownSubjects} />
     </Suspense>
   );
 }

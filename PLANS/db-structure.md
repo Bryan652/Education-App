@@ -37,11 +37,13 @@ Every table has these columns unless its section says otherwise. They aren't rep
 
 Row-level security is on for every table. Users can only access rows where `user_id = auth.uid()`. `user_id` defaults to `auth.uid()`, and the app can't set or change it.
 
+Foreign keys between student tables include `user_id`, so a student can't attach a row to someone else's subject, note or scale, even if they know its ID.
+
 ## Account
 
 ### `profiles`
 
-The `id` references `auth.users(id)` on delete cascade. There is no `user_id`, and users can only access the row where `id = auth.uid()`. A trigger creates the row on sign-up. Students can only edit `display_name` and `timezone`.
+The `id` references `auth.users(id)` on delete cascade. There is no `user_id`, and users can only access the row where `id = auth.uid()`. A trigger creates the row on sign-up. Students can only edit `display_name`, `timezone` and `default_grading_scale_id`. The browser fills in `timezone` on the student's first visit.
 
 |           Column           |  Type  | Required |                               Details                               |
 | :------------------------: | :----: | :------: | :-----------------------------------------------------------------: |
@@ -104,6 +106,8 @@ Weekly classes that repeat between the term's start and end dates.
 
 One-time items such as exams, deadlines and personal tasks. Index on `(user_id, starts_at)`.
 
+An all-day event is a date rather than a moment, so `starts_at` holds midnight UTC on that date and is read back in UTC. That keeps it on the same date in every time zone. Other events are exact moments, shown in the student's time zone.
+
 |       Column      |      Type     | Required |                   Details                   |
 | :---------------: | :-----------: | :------: | :-----------------------------------------: |
 |    `subject_id`   |     `uuid`    |    No    | References `subjects(id)` on delete cascade |
@@ -119,7 +123,7 @@ One-time items such as exams, deadlines and personal tasks. Index on `(user_id, 
 
 ### `notes`
 
-GIN index on `search_vector`.
+GIN index on `search_vector`, which uses the `english` search configuration. `content` and `plain_text` are each limited to 500,000 bytes or characters.
 
 |      Column     |    Type    | Required |                   Details                   |
 | :-------------: | :--------: | :------: | :-----------------------------------------: |
@@ -148,8 +152,13 @@ Stores file details only. The files themselves live in Supabase Storage.
 |    Bucket   |                 `note-files` (private)                |
 | Path format |      `{user_id}/{note_id}/{file_id}-{file_name}`      |
 |    Access   | Users can only access paths under their own `user_id` |
+|  File size  |                    Up to 10 MB each                   |
+|    Quota    |    50 MB per student, plus at most one file over it   |
+| File types  |     PDF, images, text, CSV, Markdown, Office files    |
 
-Deleting a note row doesn't delete its stored files, so the app must remove them too.
+`note_storage_used_bytes()` returns how much the signed-in student has stored. It counts stored objects rather than `note_files` rows, so files uploaded without a row still count. A Storage policy can't query its own table, so this function runs with elevated rights, and it only ever reports on the caller's own folder.
+
+Deleting a note row doesn't delete its stored files, so the app removes them first, both when deleting a note and when deleting a subject.
 
 ## Quiz cards
 
@@ -185,7 +194,9 @@ Append-only history, with no `updated_at`.
 
 ## Grades
 
-Final grades and GPA are calculated from these tables and never stored, so they can't go out of sync when a score changes. The app warns when a subject's category weights don't add up to 100. A subject uses its own `grading_scale_id` if set, and otherwise the student's `default_grading_scale_id`.
+Final grades and GPA are calculated from these tables and never stored, so they can't go out of sync when a score changes. The app warns when a subject's category weights don't add up to 100. A subject uses its own `grading_scale_id` if set, then the student's `default_grading_scale_id`, then a built-in A to F scale.
+
+`save_grading_scale(...)` saves a scale and its bands in one transaction, so a failure can't leave a scale half edited. It runs with the caller's rights, so row-level security still applies.
 
 ### `grading_scales`
 

@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { CalendarClock, Clock } from "lucide-react";
-import { gradeFor, meetingSummary, upcomingEvents, DEMO_TODAY, type Subject } from "@/lib/mock-data";
-import { relativeDay } from "@/lib/utils";
+import type { GradeResult } from "@/lib/grades/compute";
+import type { Subject } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 
-export function SubjectCard({ subject }: { subject: Subject }) {
-  const grade = gradeFor(subject.id);
-  const next = upcomingEvents(subject.id)[0];
-
+export function SubjectCard({
+  subject,
+  grade,
+  meetingText,
+  nextText,
+}: {
+  subject: Subject;
+  grade: GradeResult | undefined;
+  meetingText: string;
+  nextText: string;
+}) {
   return (
     <Link
       href={`/subjects/${subject.id}`}
@@ -21,20 +29,22 @@ export function SubjectCard({ subject }: { subject: Subject }) {
             <p className="mt-0.5 text-sm text-muted-foreground">{subject.instructor}</p>
           </div>
           <div className="text-right">
-            <p className="font-heading text-2xl font-semibold tabular-nums">{grade.band?.label ?? "–"}</p>
+            <p className={cn("font-heading text-2xl font-semibold tabular-nums", grade?.passing === false && "text-destructive")}>
+              {grade?.label ?? "–"}
+            </p>
             <p className="text-xs text-muted-foreground tabular-nums">
-              {grade.percent === null ? "No grades" : `${grade.percent.toFixed(1)}%`}
+              {grade?.percent == null ? "No grades" : `${grade.percent.toFixed(1)}%`}
             </p>
           </div>
         </div>
         <div className="mt-auto flex flex-col gap-1.5 text-sm text-muted-foreground">
           <p className="flex items-center gap-2">
             <Clock className="size-3.5 shrink-0" aria-hidden />
-            {meetingSummary(subject.id)}
+            {meetingText}
           </p>
           <p className="flex items-center gap-2">
             <CalendarClock className="size-3.5 shrink-0" aria-hidden />
-            {next ? `${next.title} · ${relativeDay(DEMO_TODAY, next.startsAt)}` : "Nothing due soon"}
+            {nextText}
           </p>
         </div>
       </div>

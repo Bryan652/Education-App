@@ -8,35 +8,58 @@ import { PreviewButton } from "@/components/layout/preview-button";
 import { RestoreButton } from "@/components/subjects/subject-actions";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectFormDialog } from "@/components/subjects/subject-form-dialog";
-import { termGpa } from "@/lib/grades/compute";
+import { averageOnDefaultScale, type GradingScale } from "@/lib/grades/compute";
+import { getGradesBySubject, getGradingScales, type SubjectGrade } from "@/lib/data/grades";
+import { getClock } from "@/lib/data/profile";
+import { getSchedule } from "@/lib/data/schedule";
 import { getSubjects, type SubjectRecord } from "@/lib/data/subjects";
-import { gradeFor } from "@/lib/mock-data";
+import { upcomingEvents } from "@/lib/schedule/calendar";
+import { meetingSummary } from "@/lib/schedule/time";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { relativeDay } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Subjects" };
 
-function summary(subjects: SubjectRecord[]) {
+function summary(subjects: SubjectRecord[], grades: Map<string, SubjectGrade>, defaultScale: GradingScale) {
   const units = subjects.reduce((sum, subject) => sum + subject.units, 0);
-  const gpa = termGpa(
-    subjects.map((subject) => ({
-      units: subject.units,
-      gradePoint: gradeFor(subject.id).band?.gradePoint ?? null,
-    })),
+  const { average, leftOut } = averageOnDefaultScale(
+    subjects.map((subject) => {
+      const entry = grades.get(subject.id);
+      return {
+        name: subject.name,
+        units: subject.units,
+        gradePoint: entry?.grade.gradePoint ?? null,
+        scaleId: entry?.scale.id ?? null,
+      };
+    }),
+    defaultScale.id,
   );
-  return [
+
+  const line = [
     `${subjects.length} ${subjects.length === 1 ? "subject" : "subjects"}`,
     units > 0 ? `${units} units` : null,
-    gpa === null ? null : `${gpa.toFixed(2)} GPA so far`,
+    average === null ? null : `${average.toFixed(2)} ${defaultScale.averageLabel} so far`,
   ]
     .filter(Boolean)
     .join(" · ");
+
+  if (leftOut.length === 0) return line;
+  return `${line}. ${leftOut.join(", ")} ${leftOut.length === 1 ? "isn't" : "aren't"} in the ${defaultScale.averageLabel} because ${leftOut.length === 1 ? "it uses" : "they use"} a different grading scale.`;
 }
 
 async function SubjectsContent() {
-  const { active, archived, terms } = await getSubjects();
+  const [{ active, archived, terms }, { scales, defaultScale }, { meetings, events }, { today }] = await Promise.all([
+    getSubjects(),
+    getGradingScales(),
+    getSchedule(),
+    getClock(),
+  ]);
+  const grades = await getGradesBySubject(active);
+  const scaleOptions = scales.flatMap((scale) => (scale.id ? [{ id: scale.id, name: scale.name }] : []));
+  const upcoming = upcomingEvents(events, today, [...active, ...archived]);
 
   const addButton = isSupabaseConfigured ? (
-    <SubjectFormDialog terms={terms}>
+    <SubjectFormDialog terms={terms} scales={scaleOptions}>
       <Plus aria-hidden />
       Add subject
     </SubjectFormDialog>
@@ -59,7 +82,11 @@ async function SubjectsContent() {
 
   return (
     <>
-      <PageHeader title="Subjects" description={active.length > 0 ? summary(active) : undefined} actions={addButton} />
+      <PageHeader
+        title="Subjects"
+        description={active.length > 0 ? summary(active, grades, defaultScale) : undefined}
+        actions={addButton}
+      />
 
       {active.length === 0 ? (
         <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
@@ -78,9 +105,18 @@ async function SubjectsContent() {
                 <h2 className="mb-3 text-sm font-medium text-muted-foreground">{group.title}</h2>
               )}
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {group.subjects.map((subject) => (
-                  <SubjectCard key={subject.id} subject={subject} />
-                ))}
+                {group.subjects.map((subject) => {
+                  const next = upcoming.find((event) => event.subjectId === subject.id);
+                  return (
+                    <SubjectCard
+                      key={subject.id}
+                      subject={subject}
+                      grade={grades.get(subject.id)?.grade}
+                      meetingText={meetingSummary(meetings.filter((meeting) => meeting.subjectId === subject.id))}
+                      nextText={next ? `${next.title} · ${relativeDay(today, next.startsAt)}` : "Nothing due soon"}
+                    />
+                  );
+                })}
               </div>
             </section>
           ))}

@@ -1,13 +1,5 @@
-// Temporary sample data for the UI preview. Replace with Supabase queries in step 1 of the plan.
-import {
-  bandFor,
-  subjectGrade,
-  termGpa,
-  type GradeCategory,
-  type GradeItem,
-  type ScaleBand,
-} from "@/lib/grades/compute"
-import { formatClock } from "@/lib/utils"
+// Temporary sample data for the UI preview, and for pages that aren't on real data yet.
+import type { GradeCategory, GradeItem } from "@/lib/grades/compute"
 
 export const DEMO_TODAY = "2026-11-04"
 
@@ -74,15 +66,6 @@ export const classMeetings: ClassMeeting[] = [
   ...meetings("history", [3, 5], "13:00", "14:30", "Humanities 8"),
 ]
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-export function meetingSummary(subjectId: string) {
-  const list = classMeetings.filter((meeting) => meeting.subjectId === subjectId)
-  if (list.length === 0) return "No class times yet"
-  const days = list.map((meeting) => DAY_NAMES[meeting.dayOfWeek]).join(", ")
-  return `${days} · ${formatClock(list[0].startTime)}`
-}
-
 export type EventType = "exam" | "assignment" | "task" | "other"
 
 export interface ScheduleEvent {
@@ -103,38 +86,6 @@ export const events: ScheduleEvent[] = [
   { id: "e7", subjectId: "biology", title: "Midterm exam", type: "exam", startsAt: "2026-11-17T09:00" },
   { id: "e8", subjectId: "history", title: "Group presentation", type: "other", startsAt: "2026-11-20T13:00" },
 ]
-
-export function upcomingEvents(subjectId?: string) {
-  return events
-    .filter((event) => event.startsAt.slice(0, 10) >= DEMO_TODAY)
-    .filter((event) => !subjectId || event.subjectId === subjectId)
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
-}
-
-export function todayAgenda() {
-  const dayOfWeek = new Date(`${DEMO_TODAY}T00:00:00Z`).getUTCDay()
-  const classes = classMeetings
-    .filter((meeting) => meeting.dayOfWeek === dayOfWeek)
-    .map((meeting) => ({
-      id: meeting.id,
-      time: meeting.startTime,
-      subjectId: meeting.subjectId as string | undefined,
-      title: getSubject(meeting.subjectId)?.name ?? "Class",
-      detail: `${formatClock(meeting.startTime)} – ${formatClock(meeting.endTime)} · ${meeting.location}`,
-      kind: "class" as const,
-    }))
-  const due = events
-    .filter((event) => event.startsAt.slice(0, 10) === DEMO_TODAY)
-    .map((event) => ({
-      id: event.id,
-      time: event.startsAt.slice(11, 16),
-      subjectId: event.subjectId,
-      title: event.title,
-      detail: `Due ${formatClock(event.startsAt.slice(11, 16))}`,
-      kind: event.type,
-    }))
-  return [...classes, ...due].sort((a, b) => a.time.localeCompare(b.time))
-}
 
 export interface NoteFile {
   id: string
@@ -315,19 +266,6 @@ export function dueCount(deck: Deck) {
 
 export const totalDue = decks.reduce((sum, deck) => sum + dueCount(deck), 0)
 
-export const gradingScale: ScaleBand[] = [
-  { minPercent: 93, label: "A", gradePoint: 4.0 },
-  { minPercent: 90, label: "A−", gradePoint: 3.7 },
-  { minPercent: 87, label: "B+", gradePoint: 3.3 },
-  { minPercent: 83, label: "B", gradePoint: 3.0 },
-  { minPercent: 80, label: "B−", gradePoint: 2.7 },
-  { minPercent: 77, label: "C+", gradePoint: 2.3 },
-  { minPercent: 73, label: "C", gradePoint: 2.0 },
-  { minPercent: 70, label: "C−", gradePoint: 1.7 },
-  { minPercent: 60, label: "D", gradePoint: 1.0 },
-  { minPercent: 0, label: "F", gradePoint: 0.0 },
-]
-
 function item(id: string, name: string, score: number | null, maxScore: number, gradedOn?: string): GradeItem {
   return { id, name, score, maxScore, gradedOn }
 }
@@ -441,23 +379,6 @@ export const gradeCategories: GradeCategory[] = [
 
 export function categoriesFor(subjectId: string) {
   return gradeCategories.filter((category) => category.subjectId === subjectId)
-}
-
-export function gradeFor(subjectId: string) {
-  const grade = subjectGrade(categoriesFor(subjectId))
-  return {
-    ...grade,
-    band: grade.percent === null ? null : bandFor(grade.percent, gradingScale),
-  }
-}
-
-export function currentGpa() {
-  return termGpa(
-    subjects.map((subject) => ({
-      units: subject.units,
-      gradePoint: gradeFor(subject.id).band?.gradePoint ?? null,
-    })),
-  )
 }
 
 export interface ChatMessage {

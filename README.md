@@ -2,7 +2,7 @@
 
 One place for everything school: your schedule, subjects, notes, quiz cards, grades and an AI study chat. The goal is an open source app that students can use for free.
 
-> **Status: early preview.** Google sign-in, subjects and terms work with a real database. Other screens still use sample data, and the AI isn't built yet. With no setup, everything runs on sample data.
+> **Status: early preview.** Google sign-in, subjects, grades, the schedule and notes work with a real database. Quiz cards still use sample data, and the AI isn't built yet. With no setup, everything runs on sample data.
 
 ## Features
 
@@ -11,11 +11,11 @@ One place for everything school: your schedule, subjects, notes, quiz cards, gra
 | Dashboard  |            Today's classes, cards due, deadlines, grades and notes            |
 |  Subjects  |         Add, edit, archive and delete subjects, each with its own page        |
 |  Schedule  | Week, month and list views; selecting a class opens that subject's quiz cards |
-|   Notes    |                      Rich text editor, search and filters                     |
+|   Notes    |        Rich text editor with autosave, search, filters and attachments        |
 | Quiz cards |                     Subject filter, card flip and ratings                     |
-|   Grades   |   Weighted categories, a grading scale, GPA and a warning for wrong weights   |
+|   Grades   |  Weighted categories, editable grading scales, averages and a weight warning  |
 |  AI chat   |           Past chats and sending messages, with a placeholder reply           |
-|  Settings  |              Profile, terms, grading scale and Google connections             |
+|  Settings  |             Profile, terms, grading scales and Google connections             |
 
 ## Getting started
 
@@ -80,6 +80,7 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 |  `npm run build`   |            Builds for production            |
 |  `npm run start`   | Runs the production build after building it |
 |   `npm run lint`   |            Checks the code style            |
+|     `npm test`     |             Runs the unit tests             |
 | `npm run db:push`  |     Applies database changes to Supabase    |
 | `npm run db:types` |        Regenerates the database types       |
 
@@ -91,7 +92,7 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 |        UI       |   Tailwind CSS + shadcn/ui   |  In use |
 |     Calendar    |         FullCalendar         |  In use |
 |   Note editor   |            Tiptap            |  In use |
-| Database, login | Supabase with Google sign-in | Planned |
+| Database, login | Supabase with Google sign-in |  In use |
 |   Quiz timing   |           ts-fsrs            | Planned |
 |    AI chatbot   | Each student's own API keys  | Planned |
 |     Hosting     |            Vercel            | Planned |
@@ -102,4 +103,4 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 - [Database structure](PLANS/db-structure.md): every table and column
 - [File structure](PLANS/file-structure.md): where each file goes
 
-The sample data is in `src/lib/mock-data.ts`, and "today" is always November 4, 2026 in the preview.
+The sample data is in `src/lib/mock-data.ts`, and "today" is always November 4, 2026 when running with no setup.

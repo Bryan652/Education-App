@@ -13,14 +13,21 @@ export const SUBJECT_COLORS = [
 
 export const DEFAULT_SUBJECT_COLOR = SUBJECT_COLORS[0].value;
 
+export const PREVIEW_MESSAGE = "This is a preview, so nothing is saved yet.";
+export const SIGNED_OUT_MESSAGE = "Please sign in again, then try once more.";
+
 export const idSchema = z.uuid();
 
-const optionalText = (max: number, label: string) =>
+export const optionalText = (max: number, label: string) =>
   z
     .string()
     .trim()
     .max(max, `${label} must be ${max} characters or fewer.`)
     .transform((value) => value || null);
+
+// A list picker where the first option means "none".
+export const optionalId = (message: string) =>
+  z.union([z.literal(""), z.uuid(message)]).transform((value) => value || null);
 
 export const subjectSchema = z.object({
   name: z
@@ -37,9 +44,8 @@ export const subjectSchema = z.object({
       z.coerce.number("Enter a number.").min(0, "Units can't be negative.").max(99.99, "Units must be below 100."),
     ])
     .transform((value) => (value === "" ? null : value)),
-  term_id: z
-    .union([z.literal(""), z.uuid("Choose a term from the list.")])
-    .transform((value) => value || null),
+  term_id: optionalId("Choose a term from the list."),
+  grading_scale_id: optionalId("Choose a grading scale from the list."),
 });
 
 export const termSchema = z
@@ -57,6 +63,8 @@ export interface FormState {
   status: "idle" | "success" | "error";
   message?: string;
   fieldErrors?: Record<string, string[] | undefined>;
+  // Where to go after saving, for forms that lead to a new page.
+  redirectTo?: string;
 }
 
 export const initialFormState: FormState = { status: "idle" };

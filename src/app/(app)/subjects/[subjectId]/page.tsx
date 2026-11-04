@@ -1,29 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Archive, Layers, NotebookPen, Pencil } from "lucide-react";
+import { ArrowRight, Archive, Layers, NotebookPen, Pencil, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
+import { NewNoteDialog } from "@/components/notes/note-dialogs";
+import {
+  ClassMeetingFormDialog,
+  DeleteClassMeetingButton,
+  EventFormDialog,
+} from "@/components/schedule/schedule-dialogs";
 import { ArchiveButton, DeleteSubjectButton, RestoreButton } from "@/components/subjects/subject-actions";
 import { SubjectFormDialog } from "@/components/subjects/subject-form-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getGradingScales, getSubjectGrades } from "@/lib/data/grades";
+import { getNotes } from "@/lib/data/notes";
+import { getClock } from "@/lib/data/profile";
+import { getSubjectSchedule } from "@/lib/data/schedule";
 import { getSubjectById, getTerms } from "@/lib/data/subjects";
-import {
-  classMeetings,
-  DEMO_TODAY,
-  decks,
-  dueCount,
-  getSubject as getSampleSubject,
-  gradeFor,
-  notes,
-  upcomingEvents,
-} from "@/lib/mock-data";
+import { decks, dueCount, getSubject as getSampleSubject } from "@/lib/mock-data";
+import { upcomingEvents } from "@/lib/schedule/calendar";
+import { byWeekOrder, DAY_NAMES } from "@/lib/schedule/time";
 import { cn, formatClock, relativeDay } from "@/lib/utils";
 
 type Props = { params: Promise<{ subjectId: string }> };
-
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { subjectId } = await params;
@@ -35,17 +36,27 @@ export default async function SubjectPage({ params }: Props) {
   const subject = await getSubjectById(subjectId);
   if (!subject) notFound();
 
-  const grade = gradeFor(subject.id);
-  const meetings = classMeetings.filter((meeting) => meeting.subjectId === subject.id);
-  const upcoming = upcomingEvents(subject.id);
-  const subjectNotes = notes.filter((note) => note.subjectId === subject.id);
+  const editable = !subject.isSample;
+  const [{ grade }, schedule, subjectNotes, { today }, terms, { scales }] = await Promise.all([
+    getSubjectGrades(subject),
+    getSubjectSchedule(subject),
+    getNotes({ subjectId: subject.id }),
+    getClock(),
+    editable ? getTerms() : [],
+    getGradingScales(),
+  ]);
+
+  const meetings = byWeekOrder(schedule.meetings);
+  const upcoming = upcomingEvents(schedule.events, today, []);
   const subjectDecks = decks.filter((deck) => deck.subjectId === subject.id);
-  const terms = subject.isSample ? [] : await getTerms();
+  const scaleOptions = scales.flatMap((scale) => (scale.id ? [{ id: scale.id, name: scale.name }] : []));
+  const thisSubject = [{ id: subject.id, name: subject.name }];
 
   const eyebrow = [subject.code, subject.termName].filter(Boolean).join(" · ");
   const description = [subject.instructor, subject.units > 0 ? `${subject.units} units` : null]
     .filter(Boolean)
     .join(" · ");
+  const addButton = { variant: "ghost", size: "icon-lg", className: "" } as const;
 
   return (
     <>
@@ -70,7 +81,7 @@ export default async function SubjectPage({ params }: Props) {
             </PreviewButton>
           ) : (
             <>
-              <SubjectFormDialog subject={subject} terms={terms} variant="outline">
+              <SubjectFormDialog subject={subject} terms={terms} scales={scaleOptions} variant="outline">
                 <Pencil aria-hidden />
                 Edit
               </SubjectFormDialog>
@@ -96,9 +107,11 @@ export default async function SubjectPage({ params }: Props) {
         >
           <p className="font-heading text-lg font-medium">Current grade</p>
           <div>
-            <p className="font-heading text-6xl font-semibold tabular-nums">{grade.band?.label ?? "–"}</p>
+            <p className="font-heading text-6xl font-semibold tabular-nums">{grade.label ?? "–"}</p>
             <p className="mt-1 flex items-center justify-between text-sm tabular-nums">
-              {grade.percent === null ? "No grades yet" : `${grade.percent.toFixed(1)}%`}
+              {grade.percent === null
+                ? "No grades yet"
+                : `${grade.percent.toFixed(1)}%${grade.passing === false ? " · Not passing" : ""}`}
               <span className="flex items-center gap-1 font-medium group-hover:underline">
                 View grades
                 <ArrowRight className="size-4" aria-hidden />
@@ -108,30 +121,64 @@ export default async function SubjectPage({ params }: Props) {
         </Link>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between gap-2">
             <CardTitle className="text-lg">Class times</CardTitle>
+            {editable && (
+              <ClassMeetingFormDialog
+                subjects={thisSubject}
+                subjectId={subject.id}
+                triggerProps={{ ...addButton, "aria-label": "Add class times" }}
+                trigger={<Plus aria-hidden />}
+              />
+            )}
           </CardHeader>
           <CardContent>
             {meetings.length === 0 ? (
               <p className="text-sm text-muted-foreground">No class times yet.</p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {meetings.map((meeting) => (
-                  <li key={meeting.id} className="text-sm">
-                    <p className="font-medium">{DAYS[meeting.dayOfWeek]}</p>
-                    <p className="text-muted-foreground">
-                      {formatClock(meeting.startTime)} – {formatClock(meeting.endTime)} · {meeting.location}
-                    </p>
-                  </li>
-                ))}
+                {meetings.map((meeting) => {
+                  const time = `${formatClock(meeting.startTime)} – ${formatClock(meeting.endTime)}`;
+                  const label = `${DAY_NAMES[meeting.dayOfWeek]} ${time}`;
+                  return (
+                    <li key={meeting.id} className="flex items-center gap-1 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">{DAY_NAMES[meeting.dayOfWeek]}</p>
+                        <p className="text-muted-foreground">
+                          {[time, meeting.location].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                      {editable && (
+                        <>
+                          <ClassMeetingFormDialog
+                            subjects={thisSubject}
+                            meeting={meeting}
+                            triggerProps={{ ...addButton, "aria-label": `Edit ${label}` }}
+                            trigger={<Pencil aria-hidden />}
+                          />
+                          <DeleteClassMeetingButton meeting={meeting} label={label} />
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between gap-2">
             <CardTitle className="text-lg">Coming up</CardTitle>
+            {editable && (
+              <EventFormDialog
+                subjects={thisSubject}
+                subjectId={subject.id}
+                today={today}
+                triggerProps={{ ...addButton, "aria-label": "Add an event" }}
+                trigger={<Plus aria-hidden />}
+              />
+            )}
           </CardHeader>
           <CardContent>
             {upcoming.length === 0 ? (
@@ -141,7 +188,7 @@ export default async function SubjectPage({ params }: Props) {
                 {upcoming.map((event) => (
                   <li key={event.id} className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="font-medium">{event.title}</span>
-                    <span className="shrink-0 text-muted-foreground">{relativeDay(DEMO_TODAY, event.startsAt)}</span>
+                    <span className="shrink-0 text-muted-foreground">{relativeDay(today, event.startsAt)}</span>
                   </li>
                 ))}
               </ul>
@@ -150,8 +197,16 @@ export default async function SubjectPage({ params }: Props) {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between gap-2">
             <CardTitle className="text-lg">Notes</CardTitle>
+            {editable && (
+              <NewNoteDialog
+                subjects={thisSubject}
+                subjectId={subject.id}
+                triggerProps={{ ...addButton, "aria-label": "New note" }}
+                trigger={<Plus aria-hidden />}
+              />
+            )}
           </CardHeader>
           <CardContent>
             {subjectNotes.length === 0 ? (
@@ -163,7 +218,7 @@ export default async function SubjectPage({ params }: Props) {
                     <Link href={`/notes/${note.id}`} className="group flex items-center gap-3 py-3">
                       <NotebookPen className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                       <span className="flex-1 text-sm font-medium group-hover:underline">{note.title}</span>
-                      <span className="text-sm text-muted-foreground">{relativeDay(DEMO_TODAY, note.updatedAt)}</span>
+                      <span className="text-sm text-muted-foreground">{relativeDay(today, note.updatedAt)}</span>
                     </Link>
                   </li>
                 ))}

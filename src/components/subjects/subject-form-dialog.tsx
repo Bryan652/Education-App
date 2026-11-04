@@ -4,7 +4,7 @@ import { startTransition, useActionState, useState, type FormEvent, type ReactNo
 import Link from "next/link";
 import { toast } from "sonner";
 import { createSubject, updateSubject } from "@/actions/subjects";
-import { FieldError, fieldA11y, FormField } from "@/components/layout/form-field";
+import { FieldError, fieldA11y, FormField, NativeSelect } from "@/components/layout/form-field";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,14 +19,21 @@ import { Input } from "@/components/ui/input";
 import type { SubjectRecord, Term } from "@/lib/data/subjects";
 import { DEFAULT_SUBJECT_COLOR, initialFormState, SUBJECT_COLORS, type FormState } from "@/lib/validation/subjects";
 
+export interface ScaleOption {
+  id: string;
+  name: string;
+}
+
 function SubjectForm({
   subject,
   terms,
+  scales,
   defaultTermId,
   onDone,
 }: {
   subject?: SubjectRecord;
   terms: Term[];
+  scales: ScaleOption[];
   defaultTermId?: string;
   onDone: () => void;
 }) {
@@ -127,11 +134,10 @@ function SubjectForm({
           ) : undefined
         }
       >
-        <select
+        <NativeSelect
           id="subject-term"
           name="term_id"
           defaultValue={subject ? (subject.termId ?? "") : (defaultTermId ?? "")}
-          className="h-10 w-full rounded-lg border border-input bg-transparent px-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
           {...fieldA11y("subject-term", errors.term_id)}
         >
           <option value="">No term</option>
@@ -140,7 +146,37 @@ function SubjectForm({
               {term.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
+      </FormField>
+
+      <FormField
+        id="subject-scale"
+        label="Grading scale"
+        optional
+        errors={errors.grading_scale_id}
+        hint={
+          <>
+            Only choose one if this subject is graded differently. You can add scales in{" "}
+            <Link href="/settings" className="underline">
+              Settings
+            </Link>
+            .
+          </>
+        }
+      >
+        <NativeSelect
+          id="subject-scale"
+          name="grading_scale_id"
+          defaultValue={subject?.gradingScaleId ?? ""}
+          {...fieldA11y("subject-scale", errors.grading_scale_id)}
+        >
+          <option value="">Use my default</option>
+          {scales.map((scale) => (
+            <option key={scale.id} value={scale.id}>
+              {scale.name}
+            </option>
+          ))}
+        </NativeSelect>
       </FormField>
 
       <fieldset>
@@ -196,11 +232,13 @@ function SubjectForm({
 export function SubjectFormDialog({
   subject,
   terms,
+  scales,
   variant = "default",
   children,
 }: {
   subject?: SubjectRecord;
   terms: Term[];
+  scales: ScaleOption[];
   variant?: "default" | "outline";
   children: ReactNode;
 }) {
@@ -219,7 +257,13 @@ export function SubjectFormDialog({
             {subject ? "Update this subject's details." : "Only the name is required, and you can change anything later."}
           </DialogDescription>
         </DialogHeader>
-        <SubjectForm subject={subject} terms={terms} defaultTermId={defaultTermId} onDone={() => setOpen(false)} />
+        <SubjectForm
+          subject={subject}
+          terms={terms}
+          scales={scales}
+          defaultTermId={defaultTermId}
+          onDone={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

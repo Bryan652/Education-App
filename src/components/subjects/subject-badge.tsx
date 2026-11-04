@@ -1,7 +1,16 @@
 import { getSubject } from "@/lib/mock-data";
 
-export function SubjectBadge({ subjectId, label }: { subjectId?: string; label?: string }) {
-  const subject = subjectId ? getSubject(subjectId) : undefined;
+// Pages on real data pass the subject itself. Pages still on sample data only pass its ID.
+export function SubjectBadge({
+  subject: givenSubject,
+  subjectId,
+  label,
+}: {
+  subject?: { name: string; color: string };
+  subjectId?: string;
+  label?: string;
+}) {
+  const subject = givenSubject ?? (subjectId ? getSubject(subjectId) : undefined);
   if (!subject) {
     return (
       <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">

@@ -11,49 +11,24 @@ import "temporal-polyfill/global";
 import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
-import { classMeetings, DEMO_TODAY, events, getSubject, term } from "@/lib/mock-data";
+import type { buildCalendar } from "@/lib/schedule/calendar";
 
-function colorsFor(subjectId?: string) {
-  const color = (subjectId && getSubject(subjectId)?.color) || "#6b7280";
-  return {
-    // Darkened so white event text stays readable on every subject color.
-    color: `color-mix(in oklch, ${color} 82%, black)`,
-    contrastColor: "#ffffff",
-  };
-}
-
-// Anything tied to a subject opens that subject's quiz cards.
-function linkFor(subjectId?: string) {
-  return subjectId ? { url: `/decks?subject=${subjectId}` } : {};
-}
-
-const calendarEvents = [
-  ...classMeetings.map((meeting) => ({
-    id: meeting.id,
-    title: getSubject(meeting.subjectId)?.name ?? "Class",
-    daysOfWeek: [meeting.dayOfWeek],
-    startTime: meeting.startTime,
-    endTime: meeting.endTime,
-    startRecur: term.startDate,
-    endRecur: term.endDate,
-    ...colorsFor(meeting.subjectId),
-    ...linkFor(meeting.subjectId),
-  })),
-  ...events.map((event) => ({
-    id: event.id,
-    title: event.type === "exam" ? `Exam: ${event.title}` : `Due: ${event.title}`,
-    start: event.startsAt,
-    ...colorsFor(event.subjectId),
-    ...linkFor(event.subjectId),
-  })),
-];
-
-export function ScheduleCalendar() {
+// Every time here is already on the student's own clock, so the calendar shows them as written,
+// whatever time zone the browser is in.
+export function ScheduleCalendar({
+  calendar,
+  today,
+  now,
+}: {
+  calendar: ReturnType<typeof buildCalendar>;
+  today: string;
+  now: string;
+}) {
   const router = useRouter();
   const isNarrow = window.innerWidth < 768;
   const firstView = isNarrow ? "listWeek" : "timeGridWeek";
-  const shown = useRef<{ view: string; date: Date | string }>({ view: firstView, date: DEMO_TODAY });
-  const [instance, setInstance] = useState({ key: 0, view: firstView, date: DEMO_TODAY as Date | string });
+  const shown = useRef<{ view: string; date: Date | string }>({ view: firstView, date: today });
+  const [instance, setInstance] = useState({ key: 0, view: firstView, date: today as Date | string });
 
   // Next.js hides pages with display: none when you leave them, and FullCalendar measures its
   // grid wrong while hidden. Rebuilding it for the next visit keeps the layout correct, and
@@ -72,7 +47,7 @@ export function ScheduleCalendar() {
         plugins={[classicThemePlugin, dayGridPlugin, timeGridPlugin, listPlugin]}
         initialView={instance.view}
         initialDate={instance.date}
-        now={DEMO_TODAY}
+        now={now}
         headerToolbar={
           isNarrow
             ? { start: "prev,next", center: "title", end: "listWeek,dayGridMonth" }
@@ -84,13 +59,13 @@ export function ScheduleCalendar() {
           dayGridMonth: { text: "Month" },
           listWeek: { text: "List" },
         }}
-        allDaySlot={false}
-        slotMinTime="07:00:00"
-        slotMaxTime="20:00:00"
+        allDaySlot={calendar.hasAllDayEvents}
+        slotMinTime={calendar.slotMinTime}
+        slotMaxTime={calendar.slotMaxTime}
         height="auto"
         firstDay={1}
         listItemEventTitleClass="schedule-list-title"
-        events={calendarEvents}
+        events={calendar.calendarEvents}
         datesSet={(info) => {
           shown.current = { view: info.view.type, date: info.view.currentStart };
         }}

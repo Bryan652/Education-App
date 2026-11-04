@@ -93,7 +93,7 @@ Only needed if the free limits stop being enough. Prices are per 1M tokens.
 
 ## Linked features
 
-These are already in the UI preview with sample data. Steps 4 and 6 connect them to real data. Neither needs a database change, because `class_meetings`, `events` and `decks` already have a `subject_id`.
+Step 4 connected the schedule side to real data, and step 6 will do the same for decks. Neither needs a database change, because `class_meetings`, `events` and `decks` already have a `subject_id`.
 
 ### Schedule to quiz cards
 
@@ -128,7 +128,7 @@ The quiz cards page has a filter with "All subjects" and one option per subject.
 - **Mixed scales:** if subjects use different systems, the app leaves any subject outside the default system out of the average and says so.
 - **Later:** lookup-table transmutation, for schools that convert scores with a fixed table instead of a formula.
 
-The UI preview still shows a fixed A to F scale, so this gets built in step 3.
+Until a student adds a scale in Settings, the app uses A to F (4.0), so grades work from the start. A student's first scale becomes their default.
 
 ## If more students join
 
@@ -172,7 +172,13 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 
 **Step 1 status:** done. Google sign-in works locally and on the deployed Vercel site with the real Supabase project. Pages show sample data until step 2. Alerts need nothing while on free plans with no payment card, so set them up when moving to a paid plan.
 
-**Step 2 status:** the code is done and tested against a local stand-in for Supabase. It still needs `npm run db:push` on the real project, then the updated code deployed. Subjects and terms are real, including create, edit, archive, restore and delete. Other pages keep showing sample subjects until their own steps.
+**Step 2 status:** the code is done and tested against a local stand-in for Supabase. It still needs `npm run db:push` on the real project, then the updated code deployed. Subjects and terms are real, including create, edit, archive, restore and delete.
+
+**Steps 3, 4 and 5 status:** the code is done and tested against a full local copy of Supabase, including row-level security and Storage. Like step 2, it still needs `npm run db:push` on the real project, then the updated code deployed. Quiz cards and AI chat keep showing sample subjects until steps 6 and 7.
+
+- **Step 3:** categories, scores and grading scales are real, and each subject can choose its own scale. The profile form in Settings also became real, because step 4 needs the student's time zone.
+- **Step 4:** class times and events are real. The browser fills in the student's time zone on their first visit, and they can change it in Settings. Selecting something on the calendar opens quiz cards, so events are edited from the list below the calendar.
+- **Step 5:** notes save automatically as JSON, search matches the start of words, and attachments go straight from the browser to Storage. Each file can be up to 10 MB, and each student can store 50 MB, which Supabase enforces as well as the app. These limits can change, and the plan's cost estimates assume about 20 MB per student.
 
 ## Things to watch for
 

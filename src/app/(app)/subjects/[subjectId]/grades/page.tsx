@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { TriangleAlert } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
 import { CategoryCard } from "@/components/grades/category-card";
+import { CategoryFormDialog, GradeItemFormDialog } from "@/components/grades/grade-dialogs";
 import { PageHeader } from "@/components/layout/page-header";
 import { PreviewButton } from "@/components/layout/preview-button";
+import { getSubjectGrades } from "@/lib/data/grades";
 import { getSubjectById } from "@/lib/data/subjects";
-import { categoriesFor, getSubject as getSampleSubject, gradeFor } from "@/lib/mock-data";
+import { getSubject as getSampleSubject } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ subjectId: string }> };
 
@@ -20,8 +23,40 @@ export default async function SubjectGradesPage({ params }: Props) {
   const subject = await getSubjectById(subjectId);
   if (!subject) notFound();
 
-  const grade = gradeFor(subject.id);
-  const categories = categoriesFor(subject.id);
+  const { categories, scale, grade } = await getSubjectGrades(subject);
+  const editable = !subject.isSample;
+  const categoryOptions = categories.map(({ id, name }) => ({ id, name }));
+
+  const actions = editable ? (
+    <>
+      <CategoryFormDialog
+        subjectId={subject.id}
+        triggerProps={{ variant: categories.length > 0 ? "outline" : "default" }}
+        trigger={
+          <>
+            <Plus aria-hidden />
+            Add category
+          </>
+        }
+      />
+      {categories.length > 0 && (
+        <GradeItemFormDialog
+          categories={categoryOptions}
+          trigger={
+            <>
+              <Plus aria-hidden />
+              Add score
+            </>
+          }
+        />
+      )}
+    </>
+  ) : (
+    <>
+      <PreviewButton variant="outline" size="lg">Add category</PreviewButton>
+      <PreviewButton size="lg">Add score</PreviewButton>
+    </>
+  );
 
   return (
     <>
@@ -32,19 +67,17 @@ export default async function SubjectGradesPage({ params }: Props) {
           </Link>
         }
         title="Grades"
-        actions={
-          <>
-            <PreviewButton variant="outline" size="lg">Add category</PreviewButton>
-            <PreviewButton size="lg">Add score</PreviewButton>
-          </>
-        }
+        actions={actions}
       />
 
       <div className="mb-6 flex flex-wrap items-end gap-x-10 gap-y-4 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Current grade</p>
-          <p className="mt-1 font-heading text-6xl font-semibold" style={{ color: subject.color }}>
-            {grade.band?.label ?? "–"}
+          <p
+            className={cn("mt-1 font-heading text-6xl font-semibold", grade.passing === false && "text-destructive")}
+            style={grade.passing === false ? undefined : { color: subject.color }}
+          >
+            {grade.label ?? "–"}
           </p>
         </div>
         <div>
@@ -59,6 +92,22 @@ export default async function SubjectGradesPage({ params }: Props) {
             {grade.gradedWeight} of {grade.totalWeight}
           </p>
         </div>
+        {grade.passing !== null && (
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Status</p>
+            <p className={cn("mt-1 font-heading text-3xl font-semibold", grade.passing === false && "text-destructive")}>
+              {grade.passing ? "Passing" : "Not passing"}
+            </p>
+          </div>
+        )}
+        <p className="w-full text-sm text-muted-foreground">
+          Using {scale.name}.{" "}
+          {editable && (
+            <Link href="/settings" className="underline">
+              Change grading scales
+            </Link>
+          )}
+        </p>
       </div>
 
       {categories.length > 0 && grade.totalWeight !== 100 && (
@@ -73,13 +122,19 @@ export default async function SubjectGradesPage({ params }: Props) {
 
       {categories.length === 0 && (
         <p className="mb-6 rounded-xl border border-dashed p-10 text-center text-muted-foreground">
-          No grades for this subject yet.
+          No grades for this subject yet. Add a category, such as Quizzes, to get started.
         </p>
       )}
 
       <div className="flex flex-col gap-5">
         {categories.map((category) => (
-          <CategoryCard key={category.id} category={category} />
+          <CategoryCard
+            key={category.id}
+            category={category}
+            allCategories={categoryOptions}
+            basePercent={scale.basePercent}
+            editable={editable}
+          />
         ))}
       </div>
     </>

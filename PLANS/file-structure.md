@@ -14,7 +14,7 @@ Education-App/
   next.config.ts
   package.json
   tsconfig.json
-  vitest.config.ts
+  vitest.config.mts
   public/
     icons/                   App and PWA icons
   supabase/
@@ -92,6 +92,12 @@ Education-App/
         compute.ts           Final grade and GPA calculations
         compute.test.ts
         presets.ts           Built-in grading systems
+      schedule/
+        time.ts              Time zones, dates and the hours the calendar shows
+        calendar.ts          Turns classes and events into the calendar and agenda
+      notes/
+        content.ts           Reads Tiptap documents and builds search queries
+        limits.ts            Upload and storage limits
       cards/
         scheduler.ts         ts-fsrs wrapper
         scheduler.test.ts

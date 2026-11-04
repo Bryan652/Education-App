@@ -1,40 +1,50 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Layers } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageSkeleton } from "@/components/layout/page-skeleton";
 import { SubjectBadge } from "@/components/subjects/subject-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DEMO_TODAY,
-  gradeFor,
-  getSubject,
-  notes,
-  profile,
-  subjects,
-  todayAgenda,
-  totalDue,
-  upcomingEvents,
-} from "@/lib/mock-data";
+import { getGradesBySubject } from "@/lib/data/grades";
+import { getNotes } from "@/lib/data/notes";
+import { getClock, getProfile } from "@/lib/data/profile";
+import { getSchedule } from "@/lib/data/schedule";
+import { getSubjects } from "@/lib/data/subjects";
+import { totalDue } from "@/lib/mock-data";
+import { todayAgenda, upcomingEvents } from "@/lib/schedule/calendar";
 import { cn, formatClock, formatDate, relativeDay } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-export default function DashboardPage() {
-  const agenda = todayAgenda();
-  const classCount = agenda.filter((item) => item.kind === "class").length;
-  const dueCount = agenda.length - classCount;
-  const nextUp = upcomingEvents()
-    .filter((event) => event.startsAt.slice(0, 10) > DEMO_TODAY)
+async function DashboardContent() {
+  const [profile, { active, archived, terms }, { meetings, events }, { today }, recentNotes] = await Promise.all([
+    getProfile(),
+    getSubjects(),
+    getSchedule(),
+    getClock(),
+    getNotes({ limit: 3 }),
+  ]);
+  const grades = await getGradesBySubject(active);
+
+  const subjects = [...active, ...archived];
+  const subjectOf = (id: string | null | undefined) => subjects.find((subject) => subject.id === id);
+
+  const agenda = todayAgenda({ today, meetings, events, subjects, terms });
+  const classCount = agenda.filter((item) => item.isClass).length;
+  const dueToday = agenda.length - classCount;
+  const nextUp = upcomingEvents(events, today, subjects)
+    .filter((event) => event.startsAt.slice(0, 10) > today)
     .slice(0, 4);
-  const recentNotes = [...notes].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3);
+  const gradedSubjects = active.filter((subject) => grades.get(subject.id)?.grade.percent !== null);
 
   return (
     <>
       <PageHeader
-        eyebrow={formatDate(DEMO_TODAY, { weekday: "long", month: "long", day: "numeric" })}
-        title={`Welcome back, ${profile.firstName}`}
-        description={`You have ${classCount} classes and ${dueCount} deadline today.`}
+        eyebrow={formatDate(today, { weekday: "long", month: "long", day: "numeric" })}
+        title={profile.firstName ? `Welcome back, ${profile.firstName}` : "Welcome back"}
+        description={`You have ${classCount} ${classCount === 1 ? "class" : "classes"} and ${dueToday} ${dueToday === 1 ? "deadline" : "deadlines"} today.`}
       />
 
       {/* Two independent columns on desktop. On phones the cards stack using their order values. */}
@@ -45,32 +55,33 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Today</CardTitle>
             </CardHeader>
             <CardContent>
-              <ol className="flex flex-col">
-                {agenda.map((item) => {
-                  const subject = item.subjectId ? getSubject(item.subjectId) : undefined;
-                  return (
+              {agenda.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nothing scheduled today.</p>
+              ) : (
+                <ol className="flex flex-col">
+                  {agenda.map((item) => (
                     <li key={item.id} className="flex gap-4 border-b py-3 first:pt-0 last:border-0 last:pb-0">
                       <time className="w-16 shrink-0 pt-0.5 text-sm text-muted-foreground tabular-nums">
-                        {formatClock(item.time)}
+                        {item.time ? formatClock(item.time) : "All day"}
                       </time>
                       <span
                         className="w-1 shrink-0 rounded-full"
-                        style={{ backgroundColor: subject?.color ?? "var(--border)" }}
+                        style={{ backgroundColor: subjectOf(item.subjectId)?.color ?? "var(--border)" }}
                         aria-hidden
                       />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{item.title}</p>
                         <p className="text-sm text-muted-foreground">{item.detail}</p>
                       </div>
-                      {item.kind !== "class" && (
+                      {!item.isClass && (
                         <span className="h-fit rounded-full bg-highlight px-2 py-0.5 text-xs font-medium text-highlight-foreground">
                           Due today
                         </span>
                       )}
                     </li>
-                  );
-                })}
-              </ol>
+                  ))}
+                </ol>
+              )}
             </CardContent>
           </Card>
 
@@ -79,29 +90,45 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Grades so far</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="flex flex-col gap-4">
-                {subjects.map((subject) => {
-                  const grade = gradeFor(subject.id);
-                  return (
-                    <li key={subject.id}>
-                      <Link href={`/subjects/${subject.id}/grades`} className="group block">
-                        <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
-                          <span className="font-medium group-hover:underline">{subject.name}</span>
-                          <span className="text-muted-foreground tabular-nums">
-                            {grade.percent?.toFixed(1)}% · {grade.band?.label}
-                          </span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${grade.percent ?? 0}%`, backgroundColor: subject.color }}
-                          />
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              {gradedSubjects.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Grades appear here once you add scores to a{" "}
+                  <Link href="/subjects" className="underline">
+                    subject
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-4">
+                  {gradedSubjects.map((subject) => {
+                    const grade = grades.get(subject.id)?.grade;
+                    return (
+                      <li key={subject.id}>
+                        <Link href={`/subjects/${subject.id}/grades`} className="group block">
+                          <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+                            <span className="font-medium group-hover:underline">{subject.name}</span>
+                            <span
+                              className={cn(
+                                "text-muted-foreground tabular-nums",
+                                grade?.passing === false && "font-medium text-destructive",
+                              )}
+                            >
+                              {grade?.percent?.toFixed(1)}% · {grade?.label}
+                            </span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full"
+                              // Extra credit can go past 100%, but the bar can't.
+                              style={{ width: `${Math.min(grade?.percent ?? 0, 100)}%`, backgroundColor: subject.color }}
+                            />
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -129,19 +156,23 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Coming up</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="flex flex-col gap-3.5">
-                {nextUp.map((event) => (
-                  <li key={event.id} className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{event.title}</p>
-                      <div className="mt-1">
-                        <SubjectBadge subjectId={event.subjectId} />
+              {nextUp.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nothing coming up.</p>
+              ) : (
+                <ul className="flex flex-col gap-3.5">
+                  {nextUp.map((event) => (
+                    <li key={event.id} className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{event.title}</p>
+                        <div className="mt-1">
+                          <SubjectBadge subject={subjectOf(event.subjectId)} />
+                        </div>
                       </div>
-                    </div>
-                    <p className="shrink-0 text-sm text-muted-foreground">{relativeDay(DEMO_TODAY, event.startsAt)}</p>
-                  </li>
-                ))}
-              </ul>
+                      <p className="shrink-0 text-sm text-muted-foreground">{relativeDay(today, event.startsAt)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
 
@@ -150,23 +181,35 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Recent notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="flex flex-col gap-3.5">
-                {recentNotes.map((note) => (
-                  <li key={note.id}>
-                    <Link href={`/notes/${note.id}`} className="group block">
-                      <p className="text-sm font-medium group-hover:underline">{note.title}</p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <SubjectBadge subjectId={note.subjectId} />
-                        <span className="text-xs text-muted-foreground">{relativeDay(DEMO_TODAY, note.updatedAt)}</span>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {recentNotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No notes yet.</p>
+              ) : (
+                <ul className="flex flex-col gap-3.5">
+                  {recentNotes.map((note) => (
+                    <li key={note.id}>
+                      <Link href={`/notes/${note.id}`} className="group block">
+                        <p className="text-sm font-medium group-hover:underline">{note.title}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <SubjectBadge subject={subjectOf(note.subjectId)} />
+                          <span className="text-xs text-muted-foreground">{relativeDay(today, note.updatedAt)}</span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
