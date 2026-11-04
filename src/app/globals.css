@@ -139,6 +139,12 @@
   html {
     @apply font-sans;
   }
+  /* Selects are transparent, so the open list needs its own colors or browsers show it light. */
+  option,
+  optgroup {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
 }
 
 /* Subject colors. Pages set --subject, and these keep each color readable on either background. */

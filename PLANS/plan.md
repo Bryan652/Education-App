@@ -182,6 +182,25 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 
 **Step 6 status:** the code is done and tested against a full local copy of Supabase. It still needs `npm run db:push` on the real project, then the updated code deployed. Decks, cards, the subject filter, study mode and spaced repetition are real. Reviews are scheduled in whole days, with "Again" repeating the card later in the same session. "Make cards" on a note stays a placeholder until step 7.
 
+## Speed
+
+**Decision: yes.** Tab switching felt slow, at about 3 seconds on the deployed site, because each page ran 3 to 9 database queries on every visit.
+
+- **Regions:** Supabase is in Seoul, and moving it would mean creating a new project. Vercel is set to Hong Kong and Singapore, so its functions run closer to the database. Each query's trip to the database is the biggest cost, so keep the two close.
+- **Browser caching:** `staleTimes.dynamic` in `next.config.ts` keeps visited pages in browser memory for 5 minutes. Going back to a tab then makes no requests.
+- **Measured locally:** with 120 ms added to each database call, going back to a tab went from about 830 ms to about 55 ms, and one lap of the tabs went from 31 queries to 0. The first visit to each tab is still a normal load.
+
+How the cache stays correct:
+
+- **Saves:** every Server Action calls `revalidatePath`, which clears the whole browser cache, so a student's own changes show straight away. Any new Server Action that changes data must do the same.
+- **Other devices:** changes made elsewhere can take up to 5 minutes to appear, or until the page is reloaded. This also applies to other open tabs, including after signing out in one of them.
+- **Privacy:** the cache is only in browser memory, never on the server or on disk. Signing out does a full page load, which empties it.
+- **Experimental setting:** Next.js still labels `staleTimes` experimental. If it's ever removed, tabs get slower again but nothing breaks.
+
+Ideas for later, if the first visit to a tab still feels slow:
+
+- **Fewer queries:** combine each page's queries, or stop some from waiting on others.
+- **Loading ahead of time:** `"use cache: private"` can fetch pages before they're clicked, but it means reworking every data function, and every save would fetch those pages again.
 ## Things to watch for
 
 - **Google tokens:** Supabase doesn't refresh Google access tokens, so the app must store and refresh them itself to keep Calendar sync running.
