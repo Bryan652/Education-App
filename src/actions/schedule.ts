@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getProfile } from "@/lib/data/profile";
 import { localToUtc } from "@/lib/schedule/time";
+import { syncCalendarLater } from "@/lib/google/sync";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signedInClient } from "@/lib/supabase/server";
 import { classMeetingSchema, eventSchema } from "@/lib/validation/schedule";
@@ -25,6 +26,7 @@ const MISSING_SUBJECT_FIELD: FormState = {
 // The schedule also appears on the dashboard and subject pages.
 function refreshPages() {
   revalidatePath("/", "layout");
+  syncCalendarLater();
 }
 
 function fieldErrors(error: z.ZodError): FormState {

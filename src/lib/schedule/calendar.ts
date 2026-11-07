@@ -40,6 +40,11 @@ export interface ScheduleTerm {
 
 const EVENT_TITLE_PREFIX: Partial<Record<EventType, string>> = { exam: "Exam: ", assignment: "Due: " }
 
+/** The calendar title, shared with Google Calendar sync so both read the same. */
+export function eventTitle(event: Pick<EventRecord, "title" | "type" | "completedAt">) {
+  return event.completedAt ? `✓ ${event.title}` : `${EVENT_TITLE_PREFIX[event.type] ?? ""}${event.title}`
+}
+
 function colorsFor(color: string | undefined) {
   return {
     // Darkened so white event text stays readable on every subject color.
@@ -96,7 +101,7 @@ export function buildCalendar({
       const done = Boolean(event.completedAt)
       return {
         id: event.id,
-        title: done ? `✓ ${event.title}` : `${EVENT_TITLE_PREFIX[event.type] ?? ""}${event.title}`,
+        title: eventTitle(event),
         start: event.allDay ? event.startsAt.slice(0, 10) : event.startsAt,
         ...(event.endsAt && !event.allDay ? { end: event.endsAt } : {}),
         allDay: event.allDay,

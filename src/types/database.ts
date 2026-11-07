@@ -357,6 +357,51 @@ export type Database = {
           },
         ];
       };
+      google_connections: {
+        Row: {
+          calendar_id: string | null;
+          created_at: string;
+          google_email: string | null;
+          last_synced_at: string | null;
+          refresh_token_encrypted: string;
+          scopes: string[] | null;
+          sync_error: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          calendar_id?: string | null;
+          created_at?: string;
+          google_email?: string | null;
+          last_synced_at?: string | null;
+          refresh_token_encrypted: string;
+          scopes?: string[] | null;
+          sync_error?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          calendar_id?: string | null;
+          created_at?: string;
+          google_email?: string | null;
+          last_synced_at?: string | null;
+          refresh_token_encrypted?: string;
+          scopes?: string[] | null;
+          sync_error?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "google_connections_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       grade_categories: {
         Row: {
           created_at: string;

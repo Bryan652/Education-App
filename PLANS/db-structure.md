@@ -7,7 +7,7 @@ Postgres on Supabase. Create each table in the build step that first needs it. A
 |   Group    |         Table         |             Purpose              |           Belongs to           | Build step |
 | :--------: | :-------------------: | :------------------------------: | :----------------------------: | :--------: |
 |  Account   |       `profiles`      |           User details           |          `auth.users`          |     1      |
-|  Account   |  `google_connections` |     Encrypted Google access      |           `profiles`           |     8      |
+|  Account   |  `google_connections` | Encrypted Google Calendar access |           `profiles`           |     8      |
 |  Subjects  |        `terms`        |    Semesters or school terms     |           `profiles`           |     2      |
 |  Subjects  |       `subjects`      |       Classes being taken        |            `terms`             |     2      |
 |  Schedule  |    `class_meetings`   |        Weekly class times        |           `subjects`           |     4      |
@@ -53,13 +53,18 @@ The `id` references `auth.users(id)` on delete cascade. There is no `user_id`, a
 
 ### `google_connections`
 
-`user_id` is the primary key, and there is no `id`. The browser has no access to this table, so only server code can use it.
+`user_id` is the primary key, and there is no `id`. Row-level security is on with no policies, and `anon` and `authenticated` have no grants, so only server code using the secret key can use it.
 
-|           Column          |   Type   | Required |            Details             |
-| :-----------------------: | :------: | :------: | :----------------------------: |
-| `refresh_token_encrypted` |  `text`  |   Yes    | Encrypted Google refresh token |
-|          `scopes`         | `text[]` |    No    |   Google permissions granted   |
-|       `calendar_id`       |  `text`  |    No    |  Google Calendar to sync with  |
+The refresh token is encrypted with AES-256-GCM before it's saved, using `GOOGLE_TOKEN_ENCRYPTION_KEY`, with the student's ID as extra authenticated data. A token copied onto someone else's row won't decrypt.
+
+|           Column          |      Type     | Required |                                 Details                                  |
+| :-----------------------: | :-----------: | :------: | :----------------------------------------------------------------------: |
+| `refresh_token_encrypted` |     `text`    |   Yes    |                      Encrypted Google refresh token                      |
+|          `scopes`         |    `text[]`   |    No    |                        Google permissions granted                        |
+|       `google_email`      |     `text`    |    No    |                  The Google account, shown in Settings                   |
+|       `calendar_id`       |     `text`    |    No    |               The calendar the app made; null until synced               |
+|     `last_synced_at`      | `timestamptz` |    No    |                                                                          |
+|        `sync_error`       |     `text`    |    No    | Null when the last sync worked; `reconnect` if the token stopped working |
 
 ## Subjects
 
@@ -106,6 +111,8 @@ Weekly classes that repeat between the term's start and end dates.
 
 One-time items such as exams, deadlines and personal tasks. Index on `(user_id, starts_at)`.
 
+Google Calendar sync doesn't need a `google_event_id` column. Each Google event's ID is built from the row's own ID: `e` plus the UUID's hex digits, or `c` for a class meeting.
+
 An all-day event is a date rather than a moment, so `starts_at` holds midnight UTC on that date and is read back in UTC. That keeps it on the same date in every time zone. Other events are exact moments, shown in the student's time zone.
 
 |       Column      |      Type     | Required |                   Details                   |
@@ -117,7 +124,6 @@ An all-day event is a date rather than a moment, so `starts_at` holds midnight U
 |     `ends_at`     | `timestamptz` |    No    |                                             |
 |     `all_day`     |   `boolean`   |   Yes    |               Default `false`               |
 |   `completed_at`  | `timestamptz` |    No    |                                             |
-| `google_event_id` |     `text`    |    No    |               Added in step 8               |
 
 ## Notes
 

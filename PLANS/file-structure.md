@@ -60,12 +60,11 @@ Education-App/
           page.tsx           Profile, terms, grading scales and Google
       api/
         google/
-          connect/route.ts   Starts Calendar authorization
-          callback/route.ts  Saves the encrypted Google token
-          sync/route.ts      Syncs Calendar events
+          callback/route.ts  Saves the encrypted Google token, then runs the first sync
     actions/                 Server Actions, one file per feature
       auth.ts                Starts Google sign-in
       chat.ts
+      google.ts              Connects, syncs and disconnects Google Calendar
       subjects.ts
       schedule.ts
       notes.ts
@@ -76,7 +75,7 @@ Education-App/
       ui/                    shadcn/ui components
       auth/                  Sign-in and sign-out
       layout/
-      settings/              Terms and other settings sections
+      settings/              Terms, Google and other settings sections
       subjects/
       schedule/
       notes/
@@ -110,8 +109,11 @@ Education-App/
         keys.ts              Keeps API keys on the student's device
         context.ts           Builds chatbot context from notes and subjects
       google/
-        tokens.ts            Encrypts, stores and refreshes tokens
-        calendar.ts          Google Calendar calls
+        crypto.ts            Encrypts and decrypts refresh tokens
+        tokens.ts            Google sign-in for Calendar, and stores tokens
+        calendar.ts          Turns the schedule into Google events, and calls the API
+        sync.ts              Runs a sync, or schedules one after a save
+        google.test.ts
       data/                  Reads student data for pages, one file per feature
       validation/            Zod schemas for form and API input
       mock-data.ts           Temporary sample data for the UI preview

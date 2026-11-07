@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isValidTimeZone } from "@/lib/schedule/time";
+import { syncCalendarLater } from "@/lib/google/sync";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signedInClient } from "@/lib/supabase/server";
 import {
@@ -20,6 +21,7 @@ const MISSING_MESSAGE = "That term no longer exists.";
 // Terms decide when classes repeat, and the time zone changes how every date reads.
 function refreshPages() {
   revalidatePath("/", "layout");
+  syncCalendarLater();
 }
 
 function parseTerm(formData: FormData) {

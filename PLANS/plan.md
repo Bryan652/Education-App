@@ -186,6 +186,22 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 
 **Step 7 status:** the code is done and tested against a full local copy of Supabase, with provider replies simulated. It still needs `npm run db:push` on the real project, then the updated code deployed, then trying with a real key. Keys, the model picker, chat, and making cards from a note are real, and signed-in students no longer see any sample data. The app sends a limited amount of each note and chat, to stay within free plans, and tells the student when it's cut something.
 
+**Step 8 status:** the code is done and unit tested, with Google's replies simulated. It still needs `npm run db:push` on the real project, the Google Cloud and env setup in the README, the updated code deployed, then trying with a real Google account. Google Calendar sync is real, and Settings no longer lists Classroom or Drive. See [Google Calendar sync](#google-calendar-sync).
+
+## Google Calendar sync
+
+**Decision: Calendar only, one way.** Google sign-in and Calendar are the only Google services connected. Classroom and Drive each need more permissions and Google's verification, so they wait until students ask for them.
+
+- **One way:** the app copies classes, exams and deadlines into Google. Edits made in Google are replaced on the next sync, and each event's description says so. Two-way sync would need conflict handling, and isn't worth it yet.
+- **Smallest permission:** the app asks for `calendar.app.created`, which only lets it make its own calendars and manage events in them. It makes one called Education App, and can't see or change the student's other calendars.
+- **Separate from sign-in:** students connect Calendar from Settings, so signing in still asks only for name and email.
+- **When it syncs:** after any save that changes the calendar, once the response has gone, so saving never waits for Google. Settings also has "Sync now". Each sync lists the app's events and sends only what changed.
+- **Event IDs:** each Google event's ID comes from the app's own row ID, so two syncs at once can't make duplicates, and no `google_event_id` column is needed.
+- **What's copied:** the same things as the app's calendar. Classes repeat weekly until their term ends, archived subjects are left out, and deadlines with no end time get 15 minutes.
+- **Tokens:** the refresh token is encrypted with AES-256-GCM, using a key only the server has, and tied to the student's ID. Only server code can read `google_connections`.
+- **Disconnecting:** revokes the app's access in Google and, unless the student unticks it, deletes the Education App calendar. Revoking also clears the sign-in consent, so Google asks again at the next sign-in.
+- **Expired access:** if Google stops accepting the token, such as after 7 days while the Google app is in Testing, Settings asks the student to connect again.
+
 ## Speed
 
 **Decision: yes.** Tab switching felt slow, at about 3 seconds on the deployed site, because each page ran 3 to 9 database queries on every visit.
@@ -207,7 +223,8 @@ Ideas for later, if the first visit to a tab still feels slow:
 - **Loading ahead of time:** `"use cache: private"` can fetch pages before they're clicked, but it means reworking every data function, and every save would fetch those pages again.
 ## Things to watch for
 
-- **Google tokens:** Supabase doesn't refresh Google access tokens, so the app must store and refresh them itself to keep Calendar sync running.
+- **Google tokens:** Supabase doesn't refresh Google access tokens, so the app stores the refresh token itself and gets a new access token for each sync.
+- **Token key:** changing `GOOGLE_TOKEN_ENCRYPTION_KEY` makes every stored token unreadable, so every student would have to connect Calendar again.
 - **Google OAuth limits:** in "Testing" status, the app is limited to 100 test users and refresh tokens expire after 7 days. Going public with Calendar or Classroom access requires Google's verification.
 - **Free-tier limits:** Supabase can pause inactive free projects, and Vercel's free plan is for non-commercial use only. Check the current terms before relying on either.
 - **AI limits:** students' free plans can run out or change, so the chat should explain what happened and offer another key.
@@ -217,5 +234,5 @@ Ideas for later, if the first visit to a tab still feels slow:
 ## Open questions
 
 1. **Is a phone app needed?** Assumed no, since an installable web app (PWA) covers most of this. For an App Store or Play Store release, switch the frontend to Expo (React Native) and keep Supabase.
-2. **What should "Google connection" include?** Suggested start: Google sign-in and Calendar. Classroom and Drive add more permission and verification work.
+2. **What should "Google connection" include?** Step 8 went with Google sign-in and Calendar. Should Classroom or Drive be added later? Both add more permission and verification work.
 3. **Which open source license?** MIT lets anyone reuse the code, including in paid products. AGPL-3.0 requires anyone who hosts a changed version to share their code, which fits the goal of keeping it free.

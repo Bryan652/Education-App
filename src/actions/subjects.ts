@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { NOTE_FILES_BUCKET } from "@/lib/notes/limits";
+import { syncCalendarLater } from "@/lib/google/sync";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signedInClient } from "@/lib/supabase/server";
 import {
@@ -20,6 +21,8 @@ const MISSING_MESSAGE = "That subject no longer exists.";
 // Subjects appear on nearly every page.
 function refreshSubjectPages() {
   revalidatePath("/", "layout");
+  // Names, terms and archiving all change what Google Calendar shows.
+  syncCalendarLater();
 }
 
 function saveError(error: { code: string; message: string }): FormState {
