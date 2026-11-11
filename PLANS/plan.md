@@ -1,4 +1,4 @@
-# Education App Plan
+# OLARound Plan
 
 **Recommendation:** build one responsive web app with Next.js and Supabase. The features are mostly forms, lists and records tied to a user, so a separate backend isn't needed.
 
@@ -193,13 +193,13 @@ Make subjects the core of the data model, with schedules, notes, cards and grade
 **Decision: Calendar only, one way.** Google sign-in and Calendar are the only Google services connected. Classroom and Drive each need more permissions and Google's verification, so they wait until students ask for them.
 
 - **One way:** the app copies classes, exams and deadlines into Google. Edits made in Google are replaced on the next sync, and each event's description says so. Two-way sync would need conflict handling, and isn't worth it yet.
-- **Smallest permission:** the app asks for `calendar.app.created`, which only lets it make its own calendars and manage events in them. It makes one called Education App, and can't see or change the student's other calendars.
+- **Smallest permission:** the app asks for `calendar.app.created`, which only lets it make its own calendars and manage events in them. It makes one called OLARound, and can't see or change the student's other calendars.
 - **Separate from sign-in:** students connect Calendar from Settings, so signing in still asks only for name and email.
 - **When it syncs:** after any save that changes the calendar, once the response has gone, so saving never waits for Google. Settings also has "Sync now". Each sync lists the app's events and sends only what changed.
 - **Event IDs:** each Google event's ID comes from the app's own row ID, so two syncs at once can't make duplicates, and no `google_event_id` column is needed.
 - **What's copied:** the same things as the app's calendar. Classes repeat weekly until their term ends, archived subjects are left out, and deadlines with no end time get 15 minutes.
 - **Tokens:** the refresh token is encrypted with AES-256-GCM, using a key only the server has, and tied to the student's ID. Only server code can read `google_connections`.
-- **Disconnecting:** revokes the app's access in Google and, unless the student unticks it, deletes the Education App calendar. Revoking also clears the sign-in consent, so Google asks again at the next sign-in.
+- **Disconnecting:** revokes the app's access in Google and, unless the student unticks it, deletes the OLARound calendar. Revoking also clears the sign-in consent, so Google asks again at the next sign-in.
 - **Expired access:** if Google stops accepting the token, such as after 7 days while the Google app is in Testing, Settings asks the student to connect again.
 
 ## Speed

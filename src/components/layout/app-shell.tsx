@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <GraduationCap className="size-5" aria-hidden />
           </span>
-          <span className="font-heading text-lg font-semibold text-sidebar-accent-foreground">Education App</span>
+          <span className="font-heading text-lg font-semibold text-sidebar-accent-foreground">OLARound</span>
         </Link>
 
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1 px-3">
@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <GraduationCap className="size-4.5" aria-hidden />
           </span>
-          <span className="font-heading font-semibold">Education App</span>
+          <span className="font-heading font-semibold">OLARound</span>
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle className="p-2 hover:bg-muted" iconClassName="size-5" />

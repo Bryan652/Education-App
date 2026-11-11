@@ -113,7 +113,7 @@ export async function disconnectGoogleCalendar(removeCalendar: boolean): Promise
   return {
     ok: true,
     message: calendarKept
-      ? "Disconnected. The Education App calendar couldn't be removed, so delete it in Google Calendar."
+      ? "Disconnected. The OLARound calendar couldn't be removed, so delete it in Google Calendar."
       : "Disconnected Google Calendar.",
   };
 }

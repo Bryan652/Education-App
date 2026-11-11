@@ -1,6 +1,6 @@
-# Education App
+# OLARound
 
-One place for everything school: your schedule, subjects, notes, quiz cards, grades and an AI study chat. The goal is an open source app that students can use for free.
+All around education app. One place for everything school: your schedule, subjects, notes, quiz cards, grades and an AI study chat. The goal is an open source app that students can use for free.
 
 > **Status: early preview.** Google sign-in, subjects, grades, the schedule, notes, quiz cards, AI chat and Google Calendar sync all work with a real database. AI chat uses each student's own API key. With no setup, everything runs on sample data.
 
@@ -69,13 +69,13 @@ Stop `npm run dev` and start it again so it picks up `.env.local`. Every page no
 
 ## Connect Google Calendar (optional)
 
-Students can copy their classes, exams and deadlines into Google Calendar. Sync only goes one way, into a calendar the app makes called **Education App**, and the app can't see or change any other calendar. Skip this section and the option just says it isn't set up.
+Students can copy their classes, exams and deadlines into Google Calendar. Sync only goes one way, into a calendar the app makes called **OLARound**, and the app can't see or change any other calendar. Skip this section and the option just says it isn't set up.
 
 1. In Google Cloud, open **APIs & Services > Library** and enable the **Google Calendar API**.
 2. In **Google Auth Platform > Data Access**, add the `.../auth/calendar.app.created` scope.
-3. In the web client you made for sign-in, add `http://localhost:3000/api/google/callback` under **Authorized redirect URIs**.
+3. Pick one web client under **Clients** and use it both locally and on Vercel. Add `http://localhost:3000/api/google/callback` to its **Authorized redirect URIs**.
 4. In Supabase, copy a secret key from **Project Settings > API Keys > Secret keys**.
-5. Fill in the Google section of `.env.example` in your env file, then restart `npm run dev`.
+5. Fill in the Google section of `.env.example` in your env file, then restart `npm run dev`. Use the same encryption key on Vercel, or connections made in one place won't work in the other.
 
 While the Google app is in **Testing**, only your test users can connect, and Google stops accepting the connection after 7 days. Settings then asks the student to connect again. Publishing the app with Calendar access needs Google's verification.
 

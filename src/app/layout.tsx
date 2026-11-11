@@ -17,8 +17,8 @@ const body = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Education App", template: "%s · Education App" },
-  description: "Schedule, subjects, notes, quiz cards, grades and AI help in one place.",
+  title: { default: "OLARound", template: "%s · OLARound" },
+  description: "All around education app",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

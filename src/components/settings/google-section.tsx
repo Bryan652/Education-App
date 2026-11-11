@@ -61,7 +61,7 @@ export async function GoogleSection() {
     ) : (
       <>
         <span className="block">
-          Syncing to the Education App calendar{calendar.email ? ` in ${calendar.email}` : ""}.
+          Syncing to the OLARound calendar{calendar.email ? ` in ${calendar.email}` : ""}.
         </span>
         {calendar.error ? (
           <span className="block text-destructive">{calendar.error}</span>

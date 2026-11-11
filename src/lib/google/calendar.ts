@@ -16,11 +16,11 @@ import { EVENT_TYPES } from "@/lib/validation/schedule";
 
 const API = "https://www.googleapis.com/calendar/v3";
 
-export const CALENDAR_NAME = "Education App";
+export const CALENDAR_NAME = "OLARound";
 // Marks events the app made, so a sync never deletes ones the student added to this calendar.
 const APP_MARKER = "education-app";
 const FOOTER =
-  "Added by Education App. Edit this in the app, because changes made in Google Calendar are replaced on the next sync.";
+  "Added by OLARound. Edit this in the app, because changes made in Google Calendar are replaced on the next sync.";
 
 type GoogleTime = { date: string } | { dateTime: string; timeZone: string };
 
@@ -212,7 +212,7 @@ export class GoogleCalendarApi {
       method: "POST",
       body: JSON.stringify({
         summary: CALENDAR_NAME,
-        description: "Classes, exams and deadlines from Education App.",
+        description: "Classes, exams and deadlines from OLARound.",
         timeZone,
       }),
     });

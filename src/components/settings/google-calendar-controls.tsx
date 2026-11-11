@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 
 // What the callback route reports back, as ?google= on the Settings address.
 const OUTCOMES: Record<string, string> = {
-  connected: "Connected Google Calendar. Your classes and deadlines are in the Education App calendar.",
+  connected: "Connected Google Calendar. Your classes and deadlines are in the OLARound calendar.",
   "connected-sync-failed": "Connected Google Calendar, but the first sync didn't finish. Try Sync now.",
   cancelled: "Google Calendar wasn't connected.",
   "missing-permission": "Google Calendar needs the calendar permission ticked. Please connect again.",
@@ -78,7 +78,7 @@ function DisconnectDialog() {
             onChange={(event) => setRemoveCalendar(event.target.checked)}
             className="mt-0.5 size-4 shrink-0 accent-primary"
           />
-          Also remove the Education App calendar from Google Calendar
+          Also remove the OLARound calendar from Google Calendar
         </label>
         <AlertDialogFooter>
           <AlertDialogCancel size="lg" className="px-3" disabled={pending}>

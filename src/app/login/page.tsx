@@ -18,7 +18,7 @@ export default function LoginPage() {
           <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <GraduationCap className="size-5" aria-hidden />
           </span>
-          <span className="font-heading text-lg font-semibold text-sidebar-accent-foreground">Education App</span>
+          <span className="font-heading text-lg font-semibold text-sidebar-accent-foreground">OLARound</span>
         </div>
         <div>
           <h2 className="max-w-md font-heading text-5xl leading-[1.1] font-semibold text-sidebar-accent-foreground">
